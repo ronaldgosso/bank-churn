@@ -24,9 +24,6 @@ models/*.joblib
 mlruns/
 .mlflow/
 
-# Reports and figures
-reports/figures/*.png
-reports/figures/*.html
 
 # Notebook checkpoints
 .ipynb_checkpoints/
