@@ -34,13 +34,13 @@ from churn.business import (
 
 st.set_page_config(
     page_title="Business Simulator · Bank Churn",
-    page_icon="💼",
+    page_icon=":material/query_stats:",
     layout="wide",
 )
 
 apply_custom_styles()
 
-st.title("💼 Retention Campaign Business Simulator")
+st.title("Retention Campaign Business Simulator")
 st.markdown(
     "Simulate the financial return of retention interventions. Adjust unit economics and campaign budget constraints "
     "to compute theoretical optimal decision boundaries, net retention profit, and cumulative capture curves."
@@ -196,7 +196,7 @@ with kpi_col4:
 
 # Dynamic Acceptance Statement Banner
 st.success(
-    f"📣 **Decision Policy Statement:** Contacting the top **{sim_budget_k}%** of customers captures "
+    f"**Decision Policy Statement:** Contacting the top **{sim_budget_k}%** of customers captures "
     f"**{budget_capture*100:.1f}%** of churners (lift **{budget_lift:.2f}x**) and yields an estimated profit of **${budget_actual_profit:,.2f}** "
     f"on the holdout portfolio."
 )

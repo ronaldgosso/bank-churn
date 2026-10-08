@@ -21,7 +21,7 @@ from utils import (
 # Page configuration
 st.set_page_config(
     page_title="Bank Churn Decision Support",
-    page_icon="🏦",
+    page_icon=":material/account_balance:",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -29,7 +29,7 @@ st.set_page_config(
 apply_custom_styles()
 
 # Header Section
-st.title("🏦 Bank Customer Churn Decision Support System")
+st.title("Bank Customer Churn Decision Support System")
 st.markdown(
     "**Predictive Intelligence, Cost-Sensitive Decision Theory, and Prescriptive Retention Operations for Retail Banking**"
 )
@@ -136,15 +136,15 @@ with col_overview_left:
 with col_overview_right:
     st.info(
         """
-        **🚀 Application Navigation**
+        **Application Navigation**
 
         Use the sidebar to navigate between operational modules:
 
-        1. **🎯 Customer Risk Scorer**: Score individual accounts on demand with real-time SHAP waterfall charts.
-        2. **📁 Portfolio Explorer**: Upload customer batch files (CSV), apply risk filters, and export campaign lists.
-        3. **💼 Business Simulator**: Adjust CLV, intervention costs, and budgets to simulate campaign net profit and ROI.
-        4. **📊 Model Insights**: Explore cross-validation benchmarks, ROC/PR curves, reliability diagrams, and fairness checks.
-        5. **ℹ️ About**: Review the model card, data provenance, regulatory boundaries, and API integrations.
+        1. **Customer Risk Scorer**: Score individual accounts on demand with real-time SHAP waterfall charts.
+        2. **Portfolio Explorer**: Upload customer batch files (CSV), apply risk filters, and export campaign lists.
+        3. **Business Simulator**: Adjust CLV, intervention costs, and budgets to simulate campaign net profit and ROI.
+        4. **Model Insights**: Explore cross-validation benchmarks, ROC/PR curves, reliability diagrams, and fairness checks.
+        5. **About**: Review the model card, system architecture, data provenance, and project author.
         """
     )
 
@@ -176,10 +176,13 @@ with st.sidebar:
     st.header("Bank Churn Intelligence")
     st.write("v1.0.0 · Production Ready")
     st.markdown("---")
+    st.markdown("**Author:**")
+    st.markdown("[Ronald Gosso](https://github.com/ronaldgosso)")
+    st.markdown("---")
     st.markdown("**Core Assumptions:**")
     st.markdown("- CLV Retained: **$500**")
     st.markdown("- Offer Cost: **$50**")
     st.markdown("- Offer Success Rate: **30%**")
     st.markdown("- Optimal Threshold: **0.333**")
     st.markdown("---")
-    st.caption("Developed with Python, XGBoost, Scikit-learn & Streamlit.")
+    st.caption("Engineered by Ronald Gosso with Python, XGBoost & Streamlit.")

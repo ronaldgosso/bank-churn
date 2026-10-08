@@ -20,13 +20,13 @@ from utils import (
 
 st.set_page_config(
     page_title="About · Bank Churn Decision Support",
-    page_icon="ℹ️",
+    page_icon=":material/info:",
     layout="wide",
 )
 
 apply_custom_styles()
 
-st.title("ℹ️ About the Model & System Governance")
+st.title("About the Model & System Governance")
 st.markdown(
     "Comprehensive documentation of model architecture, intended operational use, "
     "training provenance, verified test performance, known limitations, and ethical considerations."
@@ -38,7 +38,7 @@ metadata = get_cached_metadata()
 metrics = get_cached_metrics()
 
 tab1, tab2, tab3, tab4 = st.tabs(
-    ["📋 Model Card", "🛡️ Limitations & Governance", "⚙️ Tech Stack & API", "📚 Reproducibility"]
+    ["Model Card", "Limitations & Governance", "Software Architecture", "Reproducibility & Author"]
 )
 
 with tab1:
@@ -75,12 +75,12 @@ with tab1:
         rf"""
         | Evaluation Metric | Target Threshold | Verified Holdout Result | Outcome Status |
         | :--- | :--- | :--- | :--- |
-        | **ROC-AUC** | $\ge 0.8500$ | **{metrics.get('roc_auc', 0.8682):.4f}** | ✅ Exceeded Target |
-        | **PR-AUC** | > Baseline (0.2035) | **{metrics.get('pr_auc', 0.7174):.4f}** | ✅ 3.5x Baseline |
-        | **Top-Decile Lift** | $\ge 3.00$x | **{metrics.get('top_10_percent_lift', 4.2):.2f}x** | ✅ Exceeded Target |
-        | **Probability Calibration** | Brier $< 0.1000$ | **{metrics.get('brier_score', 0.0994):.4f}** | ✅ Well Calibrated |
-        | **Optimal F1 Score** | Balanced Trade-off | **{metrics.get('f1', 0.6248):.4f}** | ✅ Strong F1 |
-        | **Test Campaign Profit** | Positive ROI | **${metrics.get('campaign_net_profit', 17850.0):,.2f}** | ✅ Profitable |
+        | **ROC-AUC** | $\ge 0.8500$ | **{metrics.get('roc_auc', 0.8682):.4f}** | Exceeded Target |
+        | **PR-AUC** | > Baseline (0.2035) | **{metrics.get('pr_auc', 0.7174):.4f}** | 3.5x Baseline |
+        | **Top-Decile Lift** | $\ge 3.00$x | **{metrics.get('top_10_percent_lift', 4.2):.2f}x** | Exceeded Target |
+        | **Probability Calibration** | Brier $< 0.1000$ | **{metrics.get('brier_score', 0.0994):.4f}** | Well Calibrated |
+        | **Optimal F1 Score** | Balanced Trade-off | **{metrics.get('f1', 0.6248):.4f}** | Strong F1 |
+        | **Test Campaign Profit** | Positive ROI | **${metrics.get('campaign_net_profit', 17850.0):,.2f}** | Profitable |
         """
     )
 
@@ -108,33 +108,15 @@ with tab2:
 
 with tab3:
     st.markdown("### Software Architecture & Stack")
-    st.code(
-        """
-    +-------------------------------------------------------------------------+
-    |                             Bank Churn System                           |
-    +-------------------------------------------------------------------------+
-                                        |
-          +-----------------------------+-----------------------------+
-          |                             |                             |
-          v                             v                             v
-    [ Streamlit App ]            [ FastAPI Service ]           [ CLI Pipeline ]
-    app/Home.py                  src/churn/api.py              src/churn/train.py
-    5 Interactive Pages          /health, /predict             --config default
-          |                             |                             |
-          +-----------------------------+-----------------------------+
-                                        |
-                                        v
-                          [ src/churn Core ML Engine ]
-                          features.py -> train.py -> predict.py
-                          business.py -> explain.py -> fairness.py
-                                        |
-                                        v
-                          [ Serialized Model Artifacts ]
-                          models/churn_model.joblib
-                          models/metadata.json
-        """,
-        language="text",
-    )
+    arch_img_path = PROJECT_ROOT / "public" / "Bank Churn System Architecture.png"
+    if arch_img_path.exists():
+        st.image(
+            str(arch_img_path),
+            caption="Bank Churn System Architecture & End-to-End Operational Pipeline",
+            use_container_width=True,
+        )
+    else:
+        st.info("System architecture image located at `public/Bank Churn System Architecture.png`.")
 
     st.markdown("#### Technologies Used")
     st.markdown(
@@ -172,7 +154,12 @@ streamlit run app/Home.py
     )
 
     st.markdown("---")
-    st.markdown("🔗 **External Resources & Links:**")
-    st.markdown("- **GitHub Repository:** [ronaldgosso/bank-churn](https://github.com/ronaldgosso/bank-churn)")
-    st.markdown("- **Dataset Source:** Kaggle Bank Customer Churn Dataset (`data/raw/Churn_Modelling.csv`)")
-    st.markdown("- **Detailed Model Card:** Refer to `MODEL_CARD.md` in repository root.")
+    st.markdown("### Author & Project Lead")
+    st.markdown(
+        """
+        - **Engineered by:** [Ronald Gosso](https://github.com/ronaldgosso)
+        - **GitHub Repository:** [ronaldgosso/bank-churn](https://github.com/ronaldgosso/bank-churn)
+        - **Dataset Source:** Kaggle Bank Customer Churn Dataset (`data/raw/Churn_Modelling.csv`)
+        - **Detailed Model Card:** Refer to `MODEL_CARD.md` in repository root.
+        """
+    )

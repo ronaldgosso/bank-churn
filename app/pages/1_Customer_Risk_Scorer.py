@@ -34,13 +34,13 @@ from churn.predict import CustomerInput, get_risk_tier
 
 st.set_page_config(
     page_title="Customer Risk Scorer · Bank Churn",
-    page_icon="🎯",
+    page_icon=":material/person_search:",
     layout="wide",
 )
 
 apply_custom_styles()
 
-st.title("🎯 Customer Risk Scorer")
+st.title("Customer Risk Scorer")
 st.markdown(
     "Score an individual customer account, evaluate churn probability against the profit-optimal threshold, "
     "and inspect individual SHAP feature attributions in real time."
@@ -335,9 +335,15 @@ else:
             st.markdown("#### Top 5 Churn Risk Factors")
             for _i, d in enumerate(drivers, 1):
                 if "increases churn risk" in d:
-                    st.markdown(f"- 🔴 **{d}**")
+                    st.markdown(
+                        f'- <span style="color:#ef4444; font-weight:bold;">▲</span> **{d}**',
+                        unsafe_allow_html=True,
+                    )
                 else:
-                    st.markdown(f"- 🟢 **{d}**")
+                    st.markdown(
+                        f'- <span style="color:#10b981; font-weight:bold;">▼</span> **{d}**',
+                        unsafe_allow_html=True,
+                    )
 
             st.caption(
                 "Features are ranked by absolute SHAP contribution to log-odds of departure."
