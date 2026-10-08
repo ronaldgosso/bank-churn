@@ -1,0 +1,71 @@
+{
+  "gender_metrics": [
+    {
+      "Gender": "Female",
+      "sample_count": 930,
+      "sample_pct": 0.465,
+      "churn_count": 233,
+      "churn_rate": 0.2505,
+      "roc_auc": 0.8666,
+      "selection_rate": 0.2409,
+      "recall": 0.6352,
+      "precision": 0.6607
+    },
+    {
+      "Gender": "Male",
+      "sample_count": 1070,
+      "sample_pct": 0.535,
+      "churn_count": 174,
+      "churn_rate": 0.1626,
+      "roc_auc": 0.8599,
+      "selection_rate": 0.1551,
+      "recall": 0.5805,
+      "precision": 0.6084
+    }
+  ],
+  "gender_disparities": {
+    "selection_rate_ratio": 0.6438,
+    "recall_gap": 0.0547,
+    "precision_gap": 0.0523
+  },
+  "geography_metrics": [
+    {
+      "Geography": "France",
+      "sample_count": 1021,
+      "sample_pct": 0.5105,
+      "churn_count": 175,
+      "churn_rate": 0.1714,
+      "roc_auc": 0.8558,
+      "selection_rate": 0.145,
+      "recall": 0.5314,
+      "precision": 0.6284
+    },
+    {
+      "Geography": "Germany",
+      "sample_count": 504,
+      "sample_pct": 0.252,
+      "churn_count": 151,
+      "churn_rate": 0.2996,
+      "roc_auc": 0.8706,
+      "selection_rate": 0.3373,
+      "recall": 0.7351,
+      "precision": 0.6529
+    },
+    {
+      "Geography": "Spain",
+      "sample_count": 475,
+      "sample_pct": 0.2375,
+      "churn_count": 81,
+      "churn_rate": 0.1705,
+      "roc_auc": 0.8725,
+      "selection_rate": 0.1516,
+      "recall": 0.5556,
+      "precision": 0.625
+    }
+  ],
+  "geography_disparities": {
+    "selection_rate_ratio": 0.4299,
+    "recall_gap": 0.2037,
+    "precision_gap": 0.0279
+  }
+}

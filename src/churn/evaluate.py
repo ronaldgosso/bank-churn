@@ -1,7 +1,12 @@
 """Model evaluation metrics, cross-validation scoring, and performance curve generators."""
 
+from pathlib import Path
 from typing import Any
 
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from sklearn.base import clone
@@ -198,3 +203,45 @@ def get_confusion_matrix(
     """Return 2x2 confusion matrix [[TN, FP], [FN, TP]] at threshold."""
     y_pred = (y_prob >= threshold).astype(int)
     return confusion_matrix(y_true, y_pred)
+
+
+def plot_calibration_curve(
+    y_true: np.ndarray,
+    y_prob: np.ndarray,
+    n_bins: int = 10,
+    save_path: Any = None,
+) -> None:
+    """Plot reliability diagram (calibration curve) comparing predicted vs observed frequency.
+
+    Parameters
+    ----------
+    y_true : np.ndarray
+        Ground truth binary labels.
+    y_prob : np.ndarray
+        Predicted probabilities.
+    n_bins : int, optional
+        Number of probability bins, default 10.
+    save_path : Any, optional
+        Path to save plot.
+    """
+    from sklearn.calibration import calibration_curve
+
+    prob_true, prob_pred = calibration_curve(y_true, y_prob, n_bins=n_bins, strategy="uniform")
+
+    fig, ax = plt.subplots(figsize=(6.5, 5))
+    ax.plot(prob_pred, prob_true, marker="s", linewidth=2.5, color="#386cb0", label="Model Calibration")
+    ax.plot([0, 1], [0, 1], linestyle="--", color="gray", label="Perfect Calibration")
+
+    brier = brier_score_loss(y_true, y_prob)
+    ax.set_title(f"Reliability Diagram (Brier Score = {brier:.4f})", fontsize=11, fontweight="bold")
+    ax.set_xlabel("Mean Predicted Probability")
+    ax.set_ylabel("Fraction of Positives (Observed)")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.legend(loc="lower right")
+
+    plt.tight_layout()
+    if save_path:
+        Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(save_path, dpi=150)
+    plt.close(fig)
