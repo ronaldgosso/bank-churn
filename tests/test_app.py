@@ -68,7 +68,8 @@ def test_cached_model_inference() -> None:
 
     sample_df = get_sample_portfolio().head(3)
     probs = model.predict_proba(sample_df)[:, 1]
-    assert len(probs) == 3
+    assert len(probs) == len(sample_df)
+    assert len(probs) >= 1
     assert all(0.0 <= p <= 1.0 for p in probs)
 
 
