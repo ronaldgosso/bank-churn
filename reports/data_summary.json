@@ -1,0 +1,23 @@
+{
+  "raw_total_rows": 10000,
+  "raw_total_columns": 14,
+  "duplicate_count": 0,
+  "splits": {
+    "train": {
+      "rows": 8000,
+      "columns": 11,
+      "churn_rate": 0.20375,
+      "churn_count": 1630,
+      "non_churn_count": 6370
+    },
+    "test": {
+      "rows": 2000,
+      "columns": 11,
+      "churn_rate": 0.2035,
+      "churn_count": 407,
+      "non_churn_count": 1593
+    }
+  },
+  "random_state": 42,
+  "test_size": 0.2
+}

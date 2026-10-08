@@ -27,10 +27,6 @@ mlruns/
 # Reports and figures
 reports/figures/*.png
 reports/figures/*.html
-reports/metrics.json
-reports/data_summary.json
-reports/model_comparison.csv
-reports/best_params.json
 
 # Notebook checkpoints
 .ipynb_checkpoints/
