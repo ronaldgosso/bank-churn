@@ -106,6 +106,7 @@ bank-churn/
 ├── MODEL_CARD.md                  # Comprehensive model card & regulatory documentation
 ├── PROJECT_SPEC.md                # Master engineering specification
 ├── QUICKSTART.md                  # 3-minute fast-start developer & user guide
+├── Streamlit_app.md               # Comprehensive Streamlit app operational guide & metric dictionary
 ├── pyproject.toml                 # Package configuration, Ruff linting, & Pytest settings
 ├── requirements.txt               # Pinned runtime dependencies (includes pandera)
 └── requirements-dev.txt           # Development and testing dependencies
@@ -118,6 +119,7 @@ bank-churn/
 [![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py)
 
 - **1-Click Cloud Deploy:** Click the badge above or use the [Direct Deployment Link](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py) to launch on Streamlit Community Cloud with pre-filled repository parameters.
+- **Comprehensive App Manual & Metric Dictionary:** Read [Streamlit_app.md](Streamlit_app.md) for page-by-page operational walkthroughs, decision boundaries, SHAP explanations, counterfactual recourse, and the complete "what means what" glossary.
 - **Continuous Deployment:** Any commit merged into `main` automatically triggers a zero-downtime hot reload on Streamlit Cloud.
 - **Automated Health Probing:** The [.github/workflows/streamlit-smoke-test.yml](.github/workflows/streamlit-smoke-test.yml) workflow pre-tests cold start and probes `/_stcore/health` on every pull request.
 - **Scheduled Keep-Alive:** The [.github/workflows/streamlit-keepalive.yml](.github/workflows/streamlit-keepalive.yml) workflow pings the live URL to prevent free-tier inactive sleep timeouts.
