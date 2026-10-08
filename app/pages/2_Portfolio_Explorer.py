@@ -49,6 +49,28 @@ st.divider()
 model, metadata = get_cached_model()
 threshold = float(metadata.get("decision_threshold", 0.3333))
 
+# Initialize session state for persistent portfolio exploration across control interactions
+if "pe_raw_df" not in st.session_state:
+    st.session_state["pe_raw_df"] = None
+if "pe_source_name" not in st.session_state:
+    st.session_state["pe_source_name"] = ""
+if "pe_file_sig" not in st.session_state:
+    st.session_state["pe_file_sig"] = None
+if "pe_scored_df" not in st.session_state:
+    st.session_state["pe_scored_df"] = None
+if "pe_audit_report" not in st.session_state:
+    st.session_state["pe_audit_report"] = None
+
+
+def clear_active_portfolio() -> None:
+    """Clear active portfolio session state and reset filter selections."""
+    st.session_state["pe_raw_df"] = None
+    st.session_state["pe_source_name"] = ""
+    st.session_state["pe_file_sig"] = None
+    st.session_state["pe_scored_df"] = None
+    st.session_state["pe_audit_report"] = None
+
+
 # Top Controls: File upload & Sample Download
 col_up, col_demo = st.columns([2, 1])
 
@@ -57,6 +79,7 @@ with col_up:
         "Upload Customer Batch CSV:",
         type=["csv"],
         help=f"Must contain columns: {', '.join(ALL_FEATURE_COLS)}",
+        key="pe_file_uploader",
     )
 
 with col_demo:
@@ -70,33 +93,70 @@ with col_demo:
         mime="text/csv",
         use_container_width=True,
     )
-    load_demo = st.button("Load 2,000 Holdout Test Records", use_container_width=True)
+    if st.session_state.get("pe_raw_df") is not None:
+        btn_c1, btn_c2 = st.columns(2)
+        with btn_c1:
+            load_demo = st.button("Reload Demo Records", use_container_width=True)
+        with btn_c2:
+            if st.button("Clear Portfolio", use_container_width=True, help="Unload active portfolio"):
+                clear_active_portfolio()
+                st.rerun()
+    else:
+        load_demo = st.button("Load 2,000 Holdout Test Records", use_container_width=True)
 
-# Determine working DataFrame
-raw_input_df: pd.DataFrame | None = None
-source_name = ""
-
+# Ingest new file upload if provided
 if uploaded_file is not None:
-    try:
-        raw_input_df = pd.read_csv(uploaded_file)
-        source_name = uploaded_file.name
-    except Exception as e:
-        st.error(f"Failed to parse uploaded CSV: {e}")
+    file_sig = f"{uploaded_file.name}_{uploaded_file.size}"
+    if st.session_state.get("pe_file_sig") != file_sig:
+        try:
+            new_df = pd.read_csv(uploaded_file)
+            st.session_state["pe_raw_df"] = new_df
+            st.session_state["pe_source_name"] = uploaded_file.name
+            st.session_state["pe_file_sig"] = file_sig
+            st.session_state["pe_scored_df"] = None
+            st.session_state["pe_audit_report"] = None
+        except Exception as e:
+            st.error(f"Failed to parse uploaded CSV: {e}")
 
-elif load_demo or ("df_to_score" in st.session_state and st.session_state.get("is_demo", False)):
+# Ingest demo data if clicked
+if load_demo:
     demo_data = get_cached_test_data()
     if not demo_data.empty:
-        raw_input_df = demo_data.copy()
-        st.session_state["is_demo"] = True
-        source_name = "Holdout Test Dataset (2,000 customers)"
+        st.session_state["pe_raw_df"] = demo_data.copy()
+        st.session_state["pe_source_name"] = "Holdout Test Dataset (2,000 customers)"
+        st.session_state["pe_file_sig"] = "demo_holdout_2000"
+        st.session_state["pe_scored_df"] = None
+        st.session_state["pe_audit_report"] = None
     else:
-        st.warning("Demo dataset not found in data/processed/test.csv.")
+        st.warning("Demo dataset could not be loaded.")
 
-if raw_input_df is None:
+# Current active data
+raw_input_df = st.session_state.get("pe_raw_df")
+source_name = st.session_state.get("pe_source_name", "")
+
+if raw_input_df is None or raw_input_df.empty:
     st.info("Please upload a customer CSV file or click **Load 2,000 Holdout Test Records** above.")
 else:
-    # 1. Visible Data Sanitization Step
-    sanitized_df, audit_report = sanitize_portfolio_data(raw_input_df)
+    # 1. Visible Data Sanitization Step (cached in session state)
+    if st.session_state.get("pe_scored_df") is None or st.session_state.get("pe_audit_report") is None:
+        sanitized_df, audit_report = sanitize_portfolio_data(raw_input_df)
+        if not audit_report["is_valid"]:
+            st.error(
+                f"**Data Schema Incomplete:** Missing required modeling features: "
+                f"**{', '.join(audit_report['missing_required'])}**.\n\n"
+                f"The churn inference pipeline requires all 10 core customer features. "
+                f"Please verify your file column headers or download the template CSV above."
+            )
+            st.stop()
+
+        with st.spinner("Executing batch inference across portfolio..."):
+            scored_df = predict_batch(sanitized_df, model=model, threshold=threshold)
+
+        st.session_state["pe_audit_report"] = audit_report
+        st.session_state["pe_scored_df"] = scored_df
+    else:
+        audit_report = st.session_state["pe_audit_report"]
+        scored_df = st.session_state["pe_scored_df"]
 
     st.markdown("### 1. Data Sanitization & Schema Audit")
 
@@ -137,10 +197,6 @@ else:
                 caption="Portfolio Data Sanitization & Ingestion Flow Architecture",
                 use_container_width=True,
             )
-
-    # 2. Run batch inference
-    with st.spinner("Executing batch inference across portfolio..."):
-        scored_df = predict_batch(sanitized_df, model=model, threshold=threshold)
 
     st.success(f"Successfully processed {len(scored_df):,} customers from **{source_name}**.")
 
