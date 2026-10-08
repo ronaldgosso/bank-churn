@@ -10,6 +10,7 @@ import pytest
 from churn.config import RAW_DATA_PATH, SEED, TARGET
 from churn.data import load_raw, make_split
 from churn.validation import (
+    sanitize_portfolio_data,
     validate_inference_data,
     validate_processed_data,
     validate_raw_data,
@@ -174,3 +175,85 @@ def test_train_test_no_overlap(tmp_path: Path) -> None:
     # Merge train and test on all columns to ensure intersection is empty
     merged = pd.merge(train_df, test_df, how="inner")
     assert len(merged) == 0
+
+
+def test_sanitize_portfolio_valid_data(sample_valid_raw_df: pd.DataFrame) -> None:
+    """Verify sanitization succeeds on well-formed raw portfolio data."""
+    clean_df, report = sanitize_portfolio_data(sample_valid_raw_df)
+    assert report["is_valid"] is True
+    assert report["total_records"] == 2
+    assert len(report["core_features_found"]) == 10
+    assert "CustomerId" in report["identifier_columns"]
+    assert "Surname" in report["identifier_columns"]
+    assert clean_df["CreditScore"].dtype == "int64" or clean_df["CreditScore"].dtype == "int32"
+
+
+def test_sanitize_portfolio_aliases_and_casing() -> None:
+    """Verify column alias resolution and casing normalization."""
+    messy_df = pd.DataFrame(
+        {
+            "credit_score": [720],
+            "country": ["  germany "],
+            "sex": ["female"],
+            "age": [45],
+            "tenure": [3],
+            "balance": [50000.0],
+            "num_of_products": [2],
+            "has_credit_card": ["yes"],
+            "is_active_member": ["true"],
+            "salary": [80000.0],
+            "customer_id": [99999],
+        }
+    )
+    clean_df, report = sanitize_portfolio_data(messy_df)
+    assert report["is_valid"] is True
+    assert "CreditScore" in clean_df.columns
+    assert clean_df["Geography"].iloc[0] == "Germany"
+    assert clean_df["Gender"].iloc[0] == "Female"
+    assert clean_df["HasCrCard"].iloc[0] == 1
+    assert clean_df["IsActiveMember"].iloc[0] == 1
+    assert "CustomerId" in clean_df.columns
+
+
+def test_sanitize_portfolio_missing_required_features() -> None:
+    """Verify incomplete dataset reports missing features without crashing."""
+    incomplete_df = pd.DataFrame(
+        {
+            "CreditScore": [650],
+            "Age": [40],
+        }
+    )
+    _clean_df, report = sanitize_portfolio_data(incomplete_df)
+    assert report["is_valid"] is False
+    assert len(report["missing_required"]) > 0
+    assert "Geography" in report["missing_required"]
+    assert "Balance" in report["missing_required"]
+
+
+def test_sanitize_portfolio_imputes_and_clamps() -> None:
+    """Verify null imputation and boundary clamping."""
+    outlier_df = pd.DataFrame(
+        {
+            "CreditScore": [1000],  # Clamped to 850
+            "Geography": ["UnknownLand"],  # Mapped to France
+            "Gender": ["Alien"],  # Mapped to Female
+            "Age": [None],  # Imputed with 38
+            "Tenure": [-5],  # Clamped to 0
+            "Balance": [-100.0],  # Clamped to 0.0
+            "NumOfProducts": [10],  # Clamped to 4
+            "HasCrCard": [None],  # Imputed
+            "IsActiveMember": [None],  # Imputed
+            "EstimatedSalary": [None],  # Imputed
+        }
+    )
+    clean_df, report = sanitize_portfolio_data(outlier_df)
+    assert report["is_valid"] is True
+    assert clean_df["CreditScore"].iloc[0] == 850
+    assert clean_df["Geography"].iloc[0] == "France"
+    assert clean_df["Gender"].iloc[0] == "Female"
+    assert clean_df["Age"].iloc[0] == 38
+    assert clean_df["Tenure"].iloc[0] == 0
+    assert clean_df["Balance"].iloc[0] == 0.0
+    assert clean_df["NumOfProducts"].iloc[0] == 4
+    assert report["nulls_imputed"] > 0
+    assert report["anomalies_coerced"] > 0
