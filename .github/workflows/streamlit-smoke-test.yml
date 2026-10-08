@@ -1,0 +1,71 @@
+name: Streamlit Deployment Health Check
+
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "app/**"
+      - "src/**"
+      - "models/**"
+      - "reports/**"
+      - "requirements.txt"
+      - ".streamlit/**"
+      - ".github/workflows/streamlit-smoke-test.yml"
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "app/**"
+      - "src/**"
+      - "models/**"
+      - "reports/**"
+      - "requirements.txt"
+      - ".streamlit/**"
+      - ".github/workflows/streamlit-smoke-test.yml"
+  workflow_dispatch:
+
+jobs:
+  streamlit-deploy-test:
+    name: Verify Streamlit App Cold Start & Health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install runtime dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -e .
+
+      - name: Launch Streamlit server in headless mode
+        run: |
+          python -m streamlit run app/Home.py --server.port 8501 --server.headless true &
+          echo "STREAMLIT_PID=$!" >> $GITHUB_ENV
+
+      - name: Wait and probe Streamlit health endpoint
+        run: |
+          echo "Probing Streamlit health endpoint (http://localhost:8501/_stcore/health)..."
+          for i in {1..30}; do
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8501/_stcore/health || true)
+            if [ "$STATUS" = "200" ]; then
+              echo "✅ Streamlit app initialized successfully and responded with HTTP 200 in attempt $i!"
+              exit 0
+            fi
+            echo "Attempt $i: status is $STATUS, waiting 2 seconds..."
+            sleep 2
+          done
+          echo "❌ Timed out waiting for Streamlit server to report healthy status."
+          exit 1
+
+      - name: Shutdown server
+        if: always()
+        run: |
+          if [ -n "$STREAMLIT_PID" ]; then
+            kill "$STREAMLIT_PID" || true
+          fi

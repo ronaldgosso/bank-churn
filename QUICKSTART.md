@@ -2,6 +2,9 @@
 
 This guide will get you up and running with the **Bank Customer Churn Prediction and Decision Support System** in under 3 minutes.
 
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py)
+*(Prefer 1-Click Cloud Deploy? Click the badge above or see the [Deployment Guide](DEPLOYMENT.md)).*
+
 ---
 
 ## ⚡ 1. Prerequisites

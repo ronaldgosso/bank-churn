@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 
+### Added
+- **Streamlit Deployment Automation Flow:**
+  - Automated 1-Click deployment link to Streamlit Community Cloud (`https://share.streamlit.io/deploy`).
+  - GitHub Actions deployment smoke test workflow (`.github/workflows/streamlit-smoke-test.yml`) verifying cold start and probing `/_stcore/health`.
+  - GitHub Actions keep-alive scheduled ping workflow (`.github/workflows/streamlit-keepalive.yml`) preventing inactive sleep on free-tier instances.
+  - Dedicated deployment architectural guide (`DEPLOYMENT.md`).
+  - Added 1-Click deployment badges and direct links to `README.md` and `QUICKSTART.md`.
+
 ---
 
 ## [0.1.0] - 2026-10-08

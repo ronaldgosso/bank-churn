@@ -1,7 +1,7 @@
 # Bank Customer Churn Prediction & Decision Support System
 
 [![CI - Lint & Tests](https://github.com/ronaldgosso/bank-churn/actions/workflows/ci.yml/badge.svg)](https://github.com/ronaldgosso/bank-churn/actions/workflows/ci.yml)
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
 [![Open in Colab (EDA)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ronaldgosso/bank-churn/blob/main/notebooks/01_eda.ipynb)
@@ -100,6 +100,7 @@ bank-churn/
 │   └── validation.py              # Pandera DataFrame schemas
 ├── tests/                         # Pytest test suite (68 unit & integration tests)
 ├── CHANGELOG.md                   # Chronological project version history & phase changes
+├── DEPLOYMENT.md                  # 1-Click Streamlit Cloud deploy, CI/CD flow & keep-alive automation
 ├── Dockerfile                     # Multi-stage production container specification
 ├── MODEL_CARD.md                  # Comprehensive model card & regulatory documentation
 ├── PROJECT_SPEC.md                # Master engineering specification
@@ -108,6 +109,18 @@ bank-churn/
 ├── requirements.txt               # Pinned runtime dependencies
 └── requirements-dev.txt           # Development and testing dependencies
 ```
+
+---
+
+## ☁️ Live Streamlit Deployment & Automation
+
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py)
+
+- **1-Click Cloud Deploy:** Click the badge above or use the [Direct Deployment Link](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py) to launch on Streamlit Community Cloud with pre-filled repository parameters.
+- **Continuous Deployment:** Any commit merged into `main` automatically triggers a zero-downtime hot reload on Streamlit Cloud.
+- **Automated Health Probing:** The [.github/workflows/streamlit-smoke-test.yml](.github/workflows/streamlit-smoke-test.yml) workflow pre-tests cold start and probes `/_stcore/health` on every pull request.
+- **Scheduled Keep-Alive:** The [.github/workflows/streamlit-keepalive.yml](.github/workflows/streamlit-keepalive.yml) workflow pings the live URL to prevent free-tier inactive sleep timeouts.
+- **Detailed Guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for full step-by-step instructions, secrets setup, and container options.
 
 ---
 

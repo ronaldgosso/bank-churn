@@ -1,0 +1,36 @@
+name: Streamlit Keep-Alive & Liveness Ping
+
+on:
+  schedule:
+    # Run twice a week at 08:00 UTC (Tuesdays and Fridays) to prevent free-tier app sleep
+    - cron: "0 8 * * 2,5"
+  workflow_dispatch:
+    inputs:
+      app_url:
+        description: "Optional custom URL to ping"
+        required: false
+        default: ""
+
+jobs:
+  ping-streamlit:
+    name: Ping Streamlit Cloud Instance
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Streamlit App
+        run: |
+          TARGET_URL="${{ github.event.inputs.app_url || secrets.STREAMLIT_APP_URL || vars.STREAMLIT_APP_URL }}"
+          if [ -z "$TARGET_URL" ]; then
+            echo "ℹ️ No STREAMLIT_APP_URL secret or variable configured. Skipping keep-alive ping."
+            echo "To enable automatic keep-alive pings, add STREAMLIT_APP_URL in repo Settings -> Secrets and variables -> Actions."
+            exit 0
+          fi
+
+          echo "Pinging Streamlit app at: $TARGET_URL"
+          HTTP_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 30 "$TARGET_URL")
+          echo "Response HTTP Status: $HTTP_STATUS"
+
+          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+            echo "✅ Streamlit app is active and healthy!"
+          else
+            echo "⚠️ Warning: Received HTTP status $HTTP_STATUS from Streamlit app."
+          fi
