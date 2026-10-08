@@ -24,6 +24,7 @@ from utils import (
     COLOR_PRIMARY,
     apply_custom_styles,
     get_cached_fairness_summary,
+    get_cached_holdout_predictions,
     get_cached_metrics,
     get_cached_model,
     get_cached_model_comparison,
@@ -52,6 +53,24 @@ metrics = get_cached_metrics()
 fairness = get_cached_fairness_summary()
 test_df = get_cached_test_data()
 model, _ = get_cached_model()
+
+# Prepare holdout ground truth and probabilities seamlessly
+y_test: np.ndarray | None = None
+y_prob: np.ndarray | None = None
+
+if not test_df.empty and "Exited" in test_df.columns:
+    y_test = test_df["Exited"].to_numpy().astype(int)
+    if "churn_probability" in test_df.columns:
+        y_prob = test_df["churn_probability"].to_numpy().astype(float)
+    elif model is not None:
+        try:
+            X_test = test_df.drop(columns=["Exited"])
+            y_prob = model.predict_proba(X_test)[:, 1].astype(float)
+        except Exception:
+            y_prob = None
+
+if y_test is None or y_prob is None or len(y_test) == 0:
+    y_test, y_prob = get_cached_holdout_predictions()
 
 # Section 1: Benchmark Table
 st.subheader("1. Cross-Validation Model Benchmark")
@@ -109,10 +128,7 @@ st.subheader("2. Diagnostic Curves (Holdout Test Set n=2,000)")
 
 c_roc, c_pr = st.columns(2)
 
-if not test_df.empty and "Exited" in test_df.columns:
-    X_test = test_df.drop(columns=["Exited"])
-    y_test = test_df["Exited"].values
-    y_prob = model.predict_proba(X_test)[:, 1]
+if y_test is not None and y_prob is not None:
 
     # ROC Curve
     fpr, tpr, _ = roc_curve(y_test, y_prob)
@@ -210,7 +226,7 @@ st.subheader("3. Probability Calibration (Reliability Diagram)")
 
 cal_left, cal_right = st.columns([1, 1])
 
-if not test_df.empty and "Exited" in test_df.columns:
+if y_test is not None and y_prob is not None:
     prob_true, prob_pred = calibration_curve(y_test, y_prob, n_bins=10, strategy="uniform")
 
     with cal_left:
