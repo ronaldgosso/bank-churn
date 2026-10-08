@@ -1,0 +1,50 @@
+{
+  "optimal_threshold": 0.3333333333333333,
+  "f1_optimal_threshold": 0.375,
+  "top_10_percent": {
+    "lift": 4.02,
+    "capture_rate": 0.4025,
+    "net_profit": 58400.0
+  },
+  "top_20_percent": {
+    "lift": 3.11,
+    "capture_rate": 0.6227,
+    "net_profit": 72250.0
+  },
+  "top_30_percent": {
+    "lift": 2.49,
+    "capture_rate": 0.7466,
+    "net_profit": 62550.0
+  },
+  "optimal_threshold_campaign": {
+    "threshold": 0.3333333333333333,
+    "n_contacted": 1948.0,
+    "contact_rate": 0.2435,
+    "true_positives_captured": 1123.0,
+    "capture_rate": 0.688957055214724,
+    "total_campaign_cost": 97400.0,
+    "gross_value_retained": 168450.0,
+    "net_profit": 71050.0
+  },
+  "f1_threshold_campaign": {
+    "threshold": 0.375,
+    "n_contacted": 1724.0,
+    "contact_rate": 0.2155,
+    "true_positives_captured": 1061.0,
+    "capture_rate": 0.650920245398773,
+    "total_campaign_cost": 86200.0,
+    "gross_value_retained": 159150.0,
+    "net_profit": 72950.0
+  },
+  "default_threshold_campaign": {
+    "threshold": 0.5,
+    "n_contacted": 1242.0,
+    "contact_rate": 0.15525,
+    "true_positives_captured": 884.0,
+    "capture_rate": 0.5423312883435583,
+    "total_campaign_cost": 62100.0,
+    "gross_value_retained": 132600.0,
+    "net_profit": 70500.0
+  },
+  "acceptance_sentence": "Contacting the top 20% of customers captures 62.3% of churners (lift 3.11x) and yields an estimated profit of $72,250.00."
+}
