@@ -63,11 +63,12 @@ bank-churn/
 │   ├── Home.py                    # Executive dashboard & headline KPIs
 │   ├── utils.py                   # Caching (@st.cache_resource, @st.cache_data) & styles
 │   └── pages/
-│       ├── 1_Customer_Risk_Scorer.py   # Single account scoring, gauge, SHAP waterfall
-│       ├── 2_Portfolio_Explorer.py     # Batch CSV upload, filters, campaign export
+│       ├── 1_Customer_Risk_Scorer.py   # Single account scoring, gauge, SHAP waterfall, counterfactual recourse
+│       ├── 2_Portfolio_Explorer.py     # Batch CSV upload, Pandera audit, 2x2 Value-Risk Matrix, campaign export
 │       ├── 3_Business_Simulator.py     # ROI simulator, profit curve, decile gain chart
-│       ├── 4_Model_Insights.py         # CV benchmarks, ROC/PR curves, reliability diagram
-│       └── 5_About.py                  # Model card summary, tech stack, governance
+│       ├── 4_Model_Insights.py         # CV benchmarks, ROC/PR curves, reliability subplots, decile audits
+│       ├── 5_About.py                  # Model card summary, tech stack, governance
+│       └── 6_Developer_API.py          # Interactive REST console, request builders, multi-language snippets
 ├── data/
 │   ├── raw/                       # Raw source data (gitignored)
 │   └── processed/                 # train.csv (8,000 rows) & test.csv (2,000 rows)
@@ -87,7 +88,7 @@ bank-churn/
 │   └── model_comparison.csv       # 5-fold CV comparison across all models
 ├── src/churn/                     # Core business & machine learning library
 │   ├── __init__.py
-│   ├── api.py                     # FastAPI REST service (/health, /predict, /predict/batch)
+│   ├── api.py                     # FastAPI REST service (/health, /meta, /predict, /predict/recourse, /predict/batch)
 │   ├── business.py                # Profit calculation, threshold optimization, gain tables
 │   ├── config.py                  # Project paths, column definitions, unit economics
 │   ├── data.py                    # Data loaders and stratified splitting
@@ -95,10 +96,10 @@ bank-churn/
 │   ├── explain.py                 # SHAP TreeExplainer, waterfall, and driver strings
 │   ├── fairness.py                # Demographic parity and group performance audit
 │   ├── features.py                # FeatureEngineer transformer & ColumnTransformers
-│   ├── predict.py                 # Pydantic CustomerInput, single & batch inference
+│   ├── predict.py                 # Pydantic CustomerInput, single & batch inference, counterfactual recourse
 │   ├── train.py                   # Training pipeline & CLI entrypoint
-│   └── validation.py              # Pandera DataFrame schemas
-├── tests/                         # Pytest test suite (68 unit & integration tests)
+│   └── validation.py              # Pandera DataFrame schemas & portfolio sanitization
+├── tests/                         # Pytest test suite (73 unit & integration tests)
 ├── CHANGELOG.md                   # Chronological project version history & phase changes
 ├── DEPLOYMENT.md                  # 1-Click Streamlit Cloud deploy, CI/CD flow & keep-alive automation
 ├── Dockerfile                     # Multi-stage production container specification
@@ -106,7 +107,7 @@ bank-churn/
 ├── PROJECT_SPEC.md                # Master engineering specification
 ├── QUICKSTART.md                  # 3-minute fast-start developer & user guide
 ├── pyproject.toml                 # Package configuration, Ruff linting, & Pytest settings
-├── requirements.txt               # Pinned runtime dependencies
+├── requirements.txt               # Pinned runtime dependencies (includes pandera)
 └── requirements-dev.txt           # Development and testing dependencies
 ```
 

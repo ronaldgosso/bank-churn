@@ -6,7 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ---
 
-## [Unreleased]
+## [1.1.0] - 2026-10-08
+
+### Added
+- **Prescriptive Counterfactual Recourse Engine (`src/churn/predict.py`):**
+  - Added `compute_actionable_recourse` evaluating realistic banking levers (Digital Activation, Product Consolidation/Cross-Sell, Card Incentive, Multi-Lever Retention Bundle).
+  - Calculates probability delta ($\Delta p$), risk tier transitions, expected net campaign ROI, and generates bespoke Relationship Manager Playbooks with personalized talking points.
+- **Interactive Recourse & What-If Sandbox (`app/pages/1_Customer_Risk_Scorer.py`):**
+  - Scenario comparison table, Plotly probability delta comparison bar chart, optimal intervention card, and live interactive slider sandbox.
+- **2x2 Strategic Value-Risk Matrix & Balance Runoff (`app/pages/2_Portfolio_Explorer.py`):**
+  - Calculated Capital-at-Risk KPIs: Total High-Risk Balance ($) and Expected Annual Portfolio Balance Runoff ($\sum \text{Balance}_i \times p_i$).
+  - Added 2x2 Value-vs-Risk quadrant scatter plot (VIP Save Priority, Automated Digital Save, Relationship Deepening, Standard Service).
+  - Filter and export retention campaigns by strategic priority.
+- **Developer Hub & REST API Console (`app/pages/6_Developer_API.py`):**
+  - Dedicated interactive documentation and payload simulator for FastAPI endpoints (`/health`, `/meta`, `/predict`, `/predict/recourse`, `/predict/batch`).
+  - Architecture explainer detailing Streamlit Community Cloud (Frontend UI) vs. Docker FastAPI container.
+  - Multi-language ready-to-use code snippets for `cURL`, Python (`requests`), and TypeScript/JavaScript (`fetch`).
+  - Container deployment guide for AWS ECS, Google Cloud Run, Render, and Railway.
+- **FastAPI Microservice Upgrades (`src/churn/api.py`):**
+  - Added `POST /predict/recourse` endpoint with `RecourseRequest` schema.
+  - Added `GET /meta` endpoint returning feature specifications and economic assumptions.
+- **Production Dependency & Keep-Alive Workflow Hardening:**
+  - Added `pandera==0.34.1` to `requirements.txt` ensuring zero-dependency-drift deployment on Streamlit Cloud.
+  - Hardened `.github/workflows/streamlit-keepalive.yml` with URL sanitization and dual root/health probes.
+  - Expanded unit test suite to 73 tests (`tests/test_predict.py`, `tests/test_app.py`).
+
+---
+
+## [1.0.0] - 2026-10-08
 
 ### Added
 - **Streamlit Deployment Automation Flow:**

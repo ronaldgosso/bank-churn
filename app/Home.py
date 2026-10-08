@@ -147,11 +147,12 @@ with col_overview_right:
 
         Use the sidebar to navigate between operational modules:
 
-        1. **Customer Risk Scorer**: Score individual accounts on demand with real-time SHAP waterfall charts.
-        2. **Portfolio Explorer**: Upload customer batch files (CSV), apply risk filters, and export campaign lists.
-        3. **Business Simulator**: Adjust CLV, intervention costs, and budgets to simulate campaign net profit and ROI.
-        4. **Model Insights**: Explore cross-validation benchmarks, ROC/PR curves, reliability diagrams, and fairness checks.
+        1. **Customer Risk Scorer**: Score individual accounts on demand with real-time SHAP waterfalls, prescriptive counterfactual recourse, and banker playbooks.
+        2. **Portfolio Explorer**: Upload batch CSV files, inspect Pandera sanitization audits, analyze the 2x2 Value-Risk Matrix, and export targeted campaign lists.
+        3. **Business Simulator**: Adjust CLV, intervention costs, and budgets to simulate campaign net profit and cumulative decile lift.
+        4. **Model Insights**: Explore cross-validation benchmarks, ROC/PR curves, reliability subplots, decile audits, and demographic fairness checks.
         5. **About**: Review the model card, system architecture, data provenance, and project author.
+        6. **Developer API**: Live interactive REST console, request builders, multi-language code snippets, and Docker deployment specs.
         """
     )
 
@@ -181,7 +182,7 @@ with c4:
 # Sidebar
 with st.sidebar:
     st.header("Bank Churn Intelligence")
-    st.write("v1.0.0 · Production Ready")
+    st.write("v1.1.0 · Production Ready")
     st.markdown("---")
     st.markdown("**Author:**")
     st.markdown("[Ronald Gosso](https://github.com/ronaldgosso)")

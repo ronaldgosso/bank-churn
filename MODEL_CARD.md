@@ -66,3 +66,8 @@ Audited across Gender and Geography on the holdout test set (from `reports/fairn
 1. **Cross-Sectional Data:** Lacks temporal balance drawdown velocity (e.g. 30/60/90-day transaction history).
 2. **Economic Assumptions:** Fixed CLV (\$500) and incentive cost (\$50); dynamic LTV modeling would further refine profitability.
 3. **Regional Sensitivity:** German portfolio requires localized customer relationship investigations.
+
+## 8. Prescriptive Recourse & Actionable Interventions
+The system includes counterfactual recourse simulation (`src/churn/predict.py:compute_actionable_recourse`) to evaluate realistic banking interventions (digital banking onboarding, product consolidation, credit card incentives). 
+- **Ethical Bounding:** Immutable attributes (Age, Gender, Geography) are strictly held constant during recourse computation.
+- **Human-in-the-Loop:** All prescriptive outputs generate relationship manager playbooks rather than autonomous customer treatment.

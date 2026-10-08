@@ -65,7 +65,10 @@ Streamlit Cloud will:
 1. Provision a secure container.
 2. Install pinned dependencies from `requirements.txt`.
 3. Apply theme settings from `.streamlit/config.toml`.
-4. Launch `app/Home.py` and mount all 5 pages under `app/pages/`.
+4. Launch `app/Home.py` and mount all 6 pages under `app/pages/`.
+
+> **Note on REST APIs vs. Streamlit Cloud:**  
+> Streamlit Community Cloud hosts the interactive WebSocket dashboard (`https://<subdomain>.streamlit.app`). Appending subpaths like `/api/v2/...` to the Streamlit app URL returns an **HTTP 404** from Streamlit Cloud's edge router. To access or expose the FastAPI REST API (`/predict`, `/predict/recourse`, `/health`), deploy the container using the Dockerfile on Render, Railway, Fly.io, or AWS ECS as documented below.
 
 ---
 
