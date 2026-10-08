@@ -1,0 +1,16 @@
+{
+  "winning_model": "xgboost",
+  "best_params": {
+    "n_estimators": 275,
+    "learning_rate": 0.05663051257158077,
+    "max_depth": 3,
+    "min_child_weight": 3,
+    "subsample": 0.8117694023777325,
+    "colsample_bytree": 0.7143425077713299,
+    "scale_pos_weight": 1.4100763971231878
+  },
+  "tuned_cv_pr_auc": 0.7011,
+  "tuned_cv_roc_auc": 0.864,
+  "uncalibrated_brier_score": 0.1038,
+  "calibrated_brier_score": 0.1025
+}
