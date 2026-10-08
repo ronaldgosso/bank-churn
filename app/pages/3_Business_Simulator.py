@@ -124,22 +124,26 @@ sim_opt_thresh = optimal_threshold(clv=sim_clv, cost=sim_cost, success_rate=sim_
 opt_profit, opt_contacted = expected_profit(
     y_prob, threshold=sim_opt_thresh, clv=sim_clv, cost=sim_cost, success_rate=sim_success_rate
 )
-opt_actual_profit, opt_cm, opt_capture = actual_retention_profit(
+opt_res = actual_retention_profit(
     y_true, y_prob, threshold=sim_opt_thresh, clv=sim_clv, cost=sim_cost, success_rate=sim_success_rate
 )
+opt_actual_profit = float(opt_res["net_profit"])
+opt_capture = float(opt_res["capture_rate"])
 
 # Profit at default 0.5 threshold
 def_profit, def_contacted = expected_profit(
     y_prob, threshold=0.5, clv=sim_clv, cost=sim_cost, success_rate=sim_success_rate
 )
-def_actual_profit, def_cm, def_capture = actual_retention_profit(
+def_res = actual_retention_profit(
     y_true, y_prob, threshold=0.5, clv=sim_clv, cost=sim_cost, success_rate=sim_success_rate
 )
+def_actual_profit = float(def_res["net_profit"])
+def_capture = float(def_res["capture_rate"])
 
 # Top K% calculation
 budget_k_frac = sim_budget_k / 100.0
 k_threshold_val = float(np.quantile(y_prob, 1.0 - budget_k_frac))
-budget_actual_profit, budget_cm, budget_capture = actual_retention_profit(
+budget_res = actual_retention_profit(
     y_true,
     y_prob,
     threshold=k_threshold_val,
@@ -147,7 +151,16 @@ budget_actual_profit, budget_cm, budget_capture = actual_retention_profit(
     cost=sim_cost,
     success_rate=sim_success_rate,
 )
-budget_lift, budget_captured_count = lift_at_k(y_true, y_prob, k_percent=sim_budget_k)
+budget_actual_profit = float(budget_res["net_profit"])
+budget_capture = float(budget_res["capture_rate"])
+budget_lift, _, _ = lift_at_k(
+    y_true,
+    y_prob,
+    k=budget_k_frac,
+    clv=sim_clv,
+    cost=sim_cost,
+    success_rate=sim_success_rate,
+)
 
 st.divider()
 st.subheader("2. Financial Performance Comparison")
@@ -229,14 +242,16 @@ with chart_left:
     # Profit vs Threshold Curve
     threshold_range = np.linspace(0.05, 0.95, 91)
     profits_curve = [
-        actual_retention_profit(
-            y_true,
-            y_prob,
-            threshold=float(t),
-            clv=sim_clv,
-            cost=sim_cost,
-            success_rate=sim_success_rate,
-        )[0]
+        float(
+            actual_retention_profit(
+                y_true,
+                y_prob,
+                threshold=float(t),
+                clv=sim_clv,
+                cost=sim_cost,
+                success_rate=sim_success_rate,
+            )["net_profit"]
+        )
         for t in threshold_range
     ]
 
@@ -276,8 +291,8 @@ with chart_left:
 with chart_right:
     # Cumulative Gain Curve
     g_table = gain_table(y_true, y_prob, n_bins=10)
-    gain_x = [0.0] + list(g_table["cumulative_population_pct"])
-    gain_y = [0.0] + list(g_table["cumulative_churn_captured_pct"])
+    gain_x = [0.0] + list(g_table["cum_customer_pct"])
+    gain_y = [0.0] + list(g_table["cum_gain_pct"])
 
     g_fig = go.Figure()
     g_fig.add_trace(
@@ -317,14 +332,28 @@ with chart_right:
 
 # Gain and Decile Table
 st.markdown("### Decile Gain & Lift Breakdown")
+display_gain_table = g_table.rename(
+    columns={
+        "decile": "Decile",
+        "customers": "Customers",
+        "churners": "Churners",
+        "decile_churn_rate": "Decile Churn Rate",
+        "cum_customers": "Cumulative Customers",
+        "cum_customer_pct": "Cumulative Population %",
+        "cum_churners": "Cumulative Churners",
+        "cum_gain_pct": "Cumulative Churn Captured %",
+        "decile_lift": "Decile Lift",
+        "cum_lift": "Cumulative Lift",
+    }
+)
 st.dataframe(
-    g_table.style.format(
+    display_gain_table.style.format(
         {
-            "churn_rate": "{:.2%}",
-            "lift": "{:.2f}x",
-            "cumulative_lift": "{:.2f}x",
-            "cumulative_population_pct": "{:.1%}",
-            "cumulative_churn_captured_pct": "{:.1%}",
+            "Decile Churn Rate": "{:.2%}",
+            "Cumulative Population %": "{:.1%}",
+            "Cumulative Churn Captured %": "{:.1%}",
+            "Decile Lift": "{:.2f}x",
+            "Cumulative Lift": "{:.2f}x",
         }
     ),
     use_container_width=True,
