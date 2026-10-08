@@ -18,6 +18,7 @@ from utils import (
     COLOR_HIGH,
     COLOR_LOW,
     COLOR_MED,
+    COLOR_PRIMARY,
     apply_custom_styles,
     get_cached_model,
     get_cached_test_data,
@@ -143,7 +144,7 @@ else:
 
     st.success(f"Successfully processed {len(scored_df):,} customers from **{source_name}**.")
 
-    # High-level Summary Metrics
+    # High-level Summary Metrics & Financial Exposure
     total_customers = len(scored_df)
     high_risk_count = int((scored_df["risk_tier"] == "High").sum())
     med_risk_count = int((scored_df["risk_tier"] == "Medium").sum())
@@ -152,66 +153,167 @@ else:
     contact_rate = contact_count / total_customers if total_customers > 0 else 0.0
     campaign_cost = contact_count * OFFER_COST
 
-    st.markdown("### 2. Portfolio Risk Summary")
+    total_portfolio_balance = float(scored_df["Balance"].sum()) if "Balance" in scored_df.columns else 0.0
+    high_risk_balance = (
+        float(scored_df.loc[scored_df["risk_tier"] == "High", "Balance"].sum())
+        if "Balance" in scored_df.columns
+        else 0.0
+    )
+    expected_runoff_balance = (
+        float((scored_df["Balance"] * scored_df["churn_probability"]).sum())
+        if "Balance" in scored_df.columns
+        else 0.0
+    )
+
+    st.markdown("### 2. Portfolio Risk & Balance Exposure")
     kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
     with kpi1:
-        st.metric("Total Accounts", f"{total_customers:,}")
+        st.metric("Total Accounts", f"{total_customers:,}", f"${total_portfolio_balance:,.0f} Held")
     with kpi2:
         st.metric(
-            "High Risk", f"{high_risk_count:,}", f"{high_risk_count/total_customers*100:.1f}%"
+            "High Risk Accounts",
+            f"{high_risk_count:,}",
+            f"{high_risk_count/total_customers*100:.1f}% Share",
         )
     with kpi3:
-        st.metric("Medium Risk", f"{med_risk_count:,}", f"{med_risk_count/total_customers*100:.1f}%")
+        st.metric(
+            "High Risk Balance",
+            f"${high_risk_balance:,.0f}",
+            f"{high_risk_balance/total_portfolio_balance*100:.1f}% of Assets" if total_portfolio_balance > 0 else "0%",
+        )
     with kpi4:
-        st.metric("Low Risk", f"{low_risk_count:,}", f"{low_risk_count/total_customers*100:.1f}%")
+        st.metric(
+            "Expected Balance Runoff",
+            f"${expected_runoff_balance:,.0f}",
+            "Annual Probabilistic Loss",
+        )
     with kpi5:
         st.metric("Campaign Budget", f"${campaign_cost:,.0f}", f"{contact_rate*100:.1f}% Contacted")
 
-    # Risk Distribution Chart
-    st.markdown("### 3. Churn Probability Distribution")
-    hist_fig = px.histogram(
-        scored_df,
-        x="churn_probability",
-        color="risk_tier",
-        color_discrete_map={"High": COLOR_HIGH, "Medium": COLOR_MED, "Low": COLOR_LOW},
-        nbins=40,
-        labels={"churn_probability": "Predicted Churn Probability", "risk_tier": "Risk Tier"},
-        title="Portfolio Probability Density with Operational Thresholds",
+    # 3. Strategic Value-Risk Matrix (2x2 Action Grid)
+    # Define value cutoff using median balance among non-zero accounts or $50,000 threshold
+    median_bal = (
+        float(scored_df.loc[scored_df["Balance"] > 0, "Balance"].median())
+        if (scored_df["Balance"] > 0).any()
+        else 50000.0
     )
-    hist_fig.add_vline(
-        x=threshold,
-        line_width=3,
-        line_dash="dash",
-        line_color="#b91c1c",
-        annotation_text=f"Optimal Threshold ({threshold:.3f})",
-        annotation_position="top right",
-    )
-    hist_fig.update_layout(bargap=0.1, template="plotly_white", height=340)
-    st.plotly_chart(hist_fig, use_container_width=True)
+
+    def assign_strategy(row: pd.Series) -> str:
+        is_high_risk = row["churn_probability"] >= threshold
+        is_high_val = row["Balance"] >= median_bal
+        if is_high_risk and is_high_val:
+            return "VIP Save Priority (High Risk / High Asset)"
+        elif is_high_risk and not is_high_val:
+            return "Automated Digital Save (High Risk / Modest Asset)"
+        elif not is_high_risk and is_high_val:
+            return "Relationship Deepening (Low Risk / High Asset)"
+        else:
+            return "Standard Service (Low Risk / Modest Asset)"
+
+    scored_df["strategic_priority"] = scored_df.apply(assign_strategy, axis=1)
+
+    st.markdown("### 3. Strategic Value-vs-Risk Quadrant & Density")
+
+    tab_quad, tab_hist = st.tabs(["2x2 Strategic Action Matrix", "Probability Density Histogram"])
+
+    with tab_quad:
+        color_map = {
+            "VIP Save Priority (High Risk / High Asset)": COLOR_HIGH,
+            "Automated Digital Save (High Risk / Modest Asset)": COLOR_MED,
+            "Relationship Deepening (Low Risk / High Asset)": COLOR_PRIMARY,
+            "Standard Service (Low Risk / Modest Asset)": COLOR_LOW,
+        }
+
+        quad_fig = px.scatter(
+            scored_df,
+            x="churn_probability",
+            y="Balance",
+            color="strategic_priority",
+            color_discrete_map=color_map,
+            hover_data=["CreditScore", "Age", "NumOfProducts", "Geography"],
+            labels={
+                "churn_probability": "Predicted Churn Probability",
+                "Balance": "Account Balance ($)",
+                "strategic_priority": "Strategic Playbook",
+            },
+            title="Customer Portfolio: Capital-at-Risk vs. Churn Probability",
+            opacity=0.75,
+        )
+        quad_fig.add_vline(
+            x=threshold,
+            line_dash="dash",
+            line_color="#b91c1c",
+            annotation_text=f"Decision Boundary ({threshold:.3f})",
+            annotation_position="top left",
+        )
+        quad_fig.add_hline(
+            y=median_bal,
+            line_dash="dot",
+            line_color="#64748b",
+            annotation_text=f"Asset Median (${median_bal:,.0f})",
+            annotation_position="bottom right",
+        )
+        quad_fig.update_layout(
+            template="plotly_white",
+            height=420,
+            legend={"orientation": "h", "yanchor": "bottom", "y": -0.3, "xanchor": "center", "x": 0.5},
+            margin={"t": 35, "b": 70, "l": 40, "r": 20},
+        )
+        st.plotly_chart(quad_fig, use_container_width=True)
+
+    with tab_hist:
+        hist_fig = px.histogram(
+            scored_df,
+            x="churn_probability",
+            color="risk_tier",
+            color_discrete_map={"High": COLOR_HIGH, "Medium": COLOR_MED, "Low": COLOR_LOW},
+            nbins=40,
+            labels={"churn_probability": "Predicted Churn Probability", "risk_tier": "Risk Tier"},
+            title="Portfolio Probability Density with Operational Thresholds",
+        )
+        hist_fig.add_vline(
+            x=threshold,
+            line_width=3,
+            line_dash="dash",
+            line_color="#b91c1c",
+            annotation_text=f"Optimal Threshold ({threshold:.3f})",
+            annotation_position="top right",
+        )
+        hist_fig.update_layout(bargap=0.1, template="plotly_white", height=360)
+        st.plotly_chart(hist_fig, use_container_width=True)
 
     # Interactive Filtering & Table Exploration
     st.markdown("### 4. Targeted Customer Campaign Extraction")
 
-    f1, f2, f3 = st.columns(3)
+    f1, f2, f3, f4 = st.columns(4)
     with f1:
+        strat_options = sorted(scored_df["strategic_priority"].unique().tolist())
+        strat_filter = st.multiselect(
+            "Filter by Strategic Priority:",
+            options=strat_options,
+            default=strat_options,
+        )
+    with f2:
         tier_filter = st.multiselect(
             "Filter by Risk Tier:",
             options=["High", "Medium", "Low"],
             default=["High", "Medium"],
         )
-    with f2:
+    with f3:
         geo_options = (
             sorted(scored_df["Geography"].unique().tolist())
             if "Geography" in scored_df.columns
             else []
         )
         geo_filter = st.multiselect("Filter by Geography:", options=geo_options, default=geo_options)
-    with f3:
+    with f4:
         min_prob = st.slider("Minimum Churn Probability:", 0.0, 1.0, 0.0, 0.05)
 
     # Apply filters
     filtered_df = scored_df.copy()
+    if strat_filter and "strategic_priority" in filtered_df.columns:
+        filtered_df = filtered_df[filtered_df["strategic_priority"].isin(strat_filter)]
     if tier_filter:
         filtered_df = filtered_df[filtered_df["risk_tier"].isin(tier_filter)]
     if geo_filter and "Geography" in filtered_df.columns:
@@ -227,6 +329,7 @@ else:
     display_cols = [
         "churn_probability",
         "risk_tier",
+        "strategic_priority",
         "contact_recommendation",
         "Age",
         "Geography",

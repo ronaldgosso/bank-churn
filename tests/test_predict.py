@@ -116,7 +116,13 @@ def test_predict_batch_shape_and_columns(valid_customer_dict: dict[str, object])
 
 def test_fastapi_endpoints(valid_customer_dict: dict[str, object]) -> None:
     """Verify FastAPI endpoint functions return correct status and schemas."""
-    from churn.api import health, predict_single_customer
+    from churn.api import (
+        RecourseRequest,
+        health,
+        metadata,
+        predict_counterfactual_recourse,
+        predict_single_customer,
+    )
 
     # Health check
     data_health = health()
@@ -130,3 +136,41 @@ def test_fastapi_endpoints(valid_customer_dict: dict[str, object]) -> None:
     assert "probability" in data_pred
     assert "risk_tier" in data_pred
     assert "top_drivers" in data_pred
+
+    # Metadata endpoint
+    data_meta = metadata()
+    assert "model_metadata" in data_meta
+    assert "feature_columns" in data_meta
+    assert len(data_meta["feature_columns"]) == 10
+
+    # Recourse endpoint
+    req = RecourseRequest(customer=customer_obj, clv=500.0, save_rate=0.30)
+    data_rec = predict_counterfactual_recourse(req)
+    assert "baseline_probability" in data_rec
+    assert "scenarios" in data_rec
+    assert "banker_playbook" in data_rec
+
+
+def test_actionable_recourse_logic(valid_customer_dict: dict[str, object]) -> None:
+    """Verify compute_actionable_recourse generates valid counterfactual simulations."""
+    from churn.predict import compute_actionable_recourse
+
+    # Inactive customer with 1 product
+    test_dict = valid_customer_dict.copy()
+    test_dict["IsActiveMember"] = 0
+    test_dict["NumOfProducts"] = 1
+
+    recourse = compute_actionable_recourse(test_dict, clv=600.0, save_rate=0.40)
+    assert "baseline_probability" in recourse
+    assert "scenarios" in recourse
+    assert len(recourse["scenarios"]) >= 2
+    assert "banker_playbook" in recourse
+    assert "greeting" in recourse["banker_playbook"]
+
+    # Verify scenario attributes
+    for s in recourse["scenarios"]:
+        assert "id" in s
+        assert "new_probability" in s
+        assert "delta_probability" in s
+        assert "expected_net_roi" in s
+        assert 0.0 <= s["new_probability"] <= 1.0

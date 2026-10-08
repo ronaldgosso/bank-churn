@@ -20,6 +20,9 @@ if str(SRC_DIR) not in sys.path:
     sys.path.insert(0, str(SRC_DIR))
 
 from utils import (
+    COLOR_HIGH,
+    COLOR_LOW,
+    COLOR_MED,
     apply_custom_styles,
     get_cached_explainer,
     get_cached_model,
@@ -30,7 +33,7 @@ from churn.explain import (
     get_preprocessed_features,
     get_top_drivers,
 )
-from churn.predict import CustomerInput, get_risk_tier
+from churn.predict import CustomerInput, compute_actionable_recourse, get_risk_tier
 
 st.set_page_config(
     page_title="Customer Risk Scorer · Bank Churn",
@@ -383,3 +386,179 @@ else:
 
     except Exception as e:
         st.warning(f"SHAP explanation generation encountered a fallback: {e}")
+
+    # 4. Prescriptive Analytics & Actionable Recourse ("What-If" Simulation)
+    st.divider()
+    st.subheader("4. Prescriptive Action: Counterfactual Recourse & What-If Simulation")
+    st.markdown(
+        "Machine learning predictions diagnose **who** is at risk and **why**. "
+        "Prescriptive recourse recommends **what concrete actions** the relationship team can take "
+        "to reduce departure risk and maximize expected retention ROI."
+    )
+
+    recourse_result = compute_actionable_recourse(
+        customer=validated_customer,
+        model=model,
+        threshold=threshold,
+    )
+
+    scenarios = recourse_result.get("scenarios", [])
+    optimal_scenario = recourse_result.get("optimal_scenario")
+    playbook = recourse_result.get("banker_playbook", {})
+
+    if scenarios:
+        rec_col_left, rec_col_right = st.columns([3, 2])
+
+        with rec_col_left:
+            st.markdown("#### Evaluated Retention Interventions")
+
+            recourse_rows = []
+            for s in scenarios:
+                recourse_rows.append(
+                    {
+                        "Strategy": s["name"],
+                        "Actionable Lever": s["lever"],
+                        "Cost": f"${s['cost']:.0f}",
+                        "New Prob.": f"{s['new_probability']:.1%}",
+                        "Risk Drop": f"-{s['percent_reduction']:.1f}%",
+                        "Risk Tier": s["new_risk_tier"],
+                        "Expected Net ROI": f"${s['expected_net_roi']:,.2f}",
+                        "Recommended": "★ OPTIMAL" if s.get("recommended") else "",
+                    }
+                )
+            recourse_table_df = pd.DataFrame(recourse_rows)
+            st.dataframe(
+                recourse_table_df,
+                use_container_width=True,
+                hide_index=True,
+            )
+
+            # Bar comparison chart
+            scenario_names = ["Baseline"] + [s["name"] for s in scenarios]
+            scenario_probs = [probability * 100] + [s["new_probability"] * 100 for s in scenarios]
+            bar_colors = [
+                COLOR_HIGH if probability >= threshold else COLOR_MED
+            ] + [
+                COLOR_LOW if s["new_probability"] < (0.5 * threshold)
+                else (COLOR_MED if s["new_probability"] < threshold else COLOR_HIGH)
+                for s in scenarios
+            ]
+
+            fig_bar = go.Figure(
+                go.Bar(
+                    x=scenario_names,
+                    y=scenario_probs,
+                    marker_color=bar_colors,
+                    text=[f"{p:.1f}%" for p in scenario_probs],
+                    textposition="auto",
+                )
+            )
+            fig_bar.add_hline(
+                y=threshold * 100,
+                line_dash="dash",
+                line_color="#b91c1c",
+                annotation_text=f"Decision Threshold ({threshold:.1%})",
+                annotation_position="top right",
+            )
+            fig_bar.update_layout(
+                title="Churn Probability Comparison Across Interventions",
+                yaxis_title="Churn Probability (%)",
+                template="plotly_white",
+                height=280,
+                margin={"t": 35, "b": 30, "l": 40, "r": 20},
+            )
+            st.plotly_chart(fig_bar, use_container_width=True)
+
+        with rec_col_right:
+            st.markdown("#### Optimal Prescriptive Recommendation")
+
+            if optimal_scenario:
+                rec_roi = optimal_scenario["expected_net_roi"]
+                badge_type = "risk-badge-low" if rec_roi > 0 else "risk-badge-med"
+                st.markdown(
+                    f'<span class="{badge_type}">RECOMMENDED STRATEGY</span> '
+                    f'**{optimal_scenario["name"]}**',
+                    unsafe_allow_html=True,
+                )
+                st.markdown(
+                    f"""
+                    <div class="metric-card" style="margin-top: 10px;">
+                        <div class="metric-title">Optimal Intervention</div>
+                        <div style="font-size: 1.05rem; font-weight: 600; color: #1e293b; margin-bottom: 6px;">
+                            {optimal_scenario['action']}
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-top: 10px; font-size: 0.85rem;">
+                            <span><strong>Risk Delta:</strong> -{optimal_scenario['percent_reduction']:.1f}%</span>
+                            <span><strong>New Risk Tier:</strong> {optimal_scenario['new_risk_tier']}</span>
+                            <span><strong>Expected Net Gain:</strong> ${optimal_scenario['expected_net_roi']:,.2f}</span>
+                        </div>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            else:
+                st.info("No intervention necessary; account is within optimal safe operating boundaries.")
+
+            st.markdown("#### Relationship Manager Playbook")
+            st.markdown(
+                f"""
+                <div style="background-color: #f1f5f9; border-left: 4px solid #2563eb; padding: 12px 16px; border-radius: 4px; font-size: 0.9rem;">
+                    <p style="margin-bottom: 6px;"><strong>Greeting:</strong> <em>"{playbook.get('greeting', '')}"</em></p>
+                    <p style="margin-bottom: 6px;"><strong>Context:</strong> {playbook.get('observation', '')}</p>
+                    <p style="margin-bottom: 6px;"><strong>Tailored Pitch:</strong> <em>"{playbook.get('recommended_pitch', '')}"</em></p>
+                    <p style="margin-bottom: 0;"><strong>Financial Impact:</strong> {playbook.get('impact_forecast', '')}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        # Interactive What-If Sandbox
+        with st.expander("Interactive What-If Scenario Sandbox", expanded=False):
+            st.markdown(
+                "Experiment with customized operational adjustments to test how arbitrary customer changes "
+                "influence calibrated churn probability and financial outcome."
+            )
+            w_col1, w_col2, w_col3 = st.columns(3)
+            with w_col1:
+                what_active = st.selectbox(
+                    "Simulate Active Member Status:",
+                    options=[1, 0],
+                    format_func=lambda x: "Active (1)" if x == 1 else "Inactive (0)",
+                    index=0 if validated_customer.IsActiveMember == 1 else 1,
+                    key="what_active",
+                )
+            with w_col2:
+                what_prods = st.selectbox(
+                    "Simulate Number of Products:",
+                    options=[1, 2, 3, 4],
+                    index=[1, 2, 3, 4].index(validated_customer.NumOfProducts),
+                    key="what_prods",
+                )
+            with w_col3:
+                what_card = st.selectbox(
+                    "Simulate Credit Card Possession:",
+                    options=[1, 0],
+                    format_func=lambda x: "Has Card (1)" if x == 1 else "No Card (0)",
+                    index=0 if validated_customer.HasCrCard == 1 else 1,
+                    key="what_card",
+                )
+
+            sandbox_dict = validated_customer.model_dump()
+            sandbox_dict["IsActiveMember"] = what_active
+            sandbox_dict["NumOfProducts"] = what_prods
+            sandbox_dict["HasCrCard"] = what_card
+
+            sandbox_prob = float(model.predict_proba(pd.DataFrame([sandbox_dict]))[0, 1])
+            sandbox_delta = sandbox_prob - probability
+            sandbox_tier = get_risk_tier(sandbox_prob, threshold=threshold)
+
+            sb_m1, sb_m2, sb_m3 = st.columns(3)
+            with sb_m1:
+                st.metric("Simulated Churn Probability", f"{sandbox_prob:.1%}", f"{sandbox_delta*100:+.1f}% vs Current")
+            with sb_m2:
+                st.metric("Simulated Risk Tier", sandbox_tier)
+            with sb_m3:
+                status_color = "Safe / Preserved" if sandbox_prob < threshold else "Still Exceeds Threshold"
+                st.metric("Retention Status", status_color)
+    else:
+        st.info("Customer risk profile is healthy; standard monitoring active.")

@@ -29,12 +29,28 @@ jobs:
             exit 0
           fi
 
-          echo "Pinging Streamlit app at: $TARGET_URL"
-          HTTP_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 30 "$TARGET_URL")
-          echo "Response HTTP Status: $HTTP_STATUS"
+          # Ensure https:// prefix if missing
+          if [[ ! "$TARGET_URL" =~ ^https?:// ]]; then
+            TARGET_URL="https://$TARGET_URL"
+          fi
+
+          # Sanitize URL: strip accidental /api/ or trailing paths to keep-alive base Streamlit domain
+          BASE_URL=$(echo "$TARGET_URL" | sed -E 's#(https?://[^/]+).*#\1#')
+          echo "Sanitized Streamlit Base URL: $BASE_URL"
+
+          echo "Pinging Streamlit app at: $BASE_URL"
+          HTTP_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 30 "$BASE_URL")
+          echo "Base URL Response HTTP Status: $HTTP_STATUS"
+
+          # Also probe Streamlit core healthcheck endpoint
+          HEALTH_URL="$BASE_URL/_stcore/health"
+          HEALTH_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 15 "$HEALTH_URL" || true)
+          echo "Streamlit Health Endpoint ($HEALTH_URL) Status: $HEALTH_STATUS"
 
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
             echo "Streamlit app is active and healthy!"
+          elif [ "$HEALTH_STATUS" = "200" ]; then
+            echo "Streamlit health check responded with HTTP 200 OK!"
           else
-            echo "Warning: Received HTTP status $HTTP_STATUS from Streamlit app."
+            echo "Warning: Received HTTP status $HTTP_STATUS from Streamlit app (Health: $HEALTH_STATUS)."
           fi

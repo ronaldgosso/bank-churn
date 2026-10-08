@@ -57,10 +57,11 @@ streamlit run app/Home.py
 👉 Open your browser at **http://localhost:8501**
 
 **What you can do:**
-- **Customer Risk Scorer:** Input or load customer profiles, view calibrated churn probability, risk tier badge, top 5 SHAP factors, and individual decision waterfall.
-- **Portfolio Explorer:** Upload batch CSV files, filter by risk cohort, and export targeted retention contact lists.
+- **Customer Risk Scorer:** Input or load customer profiles, view calibrated churn probability, risk tier badge, top 5 SHAP factors, individual decision waterfall, and **prescriptive counterfactual recourse ("What-If" sandbox & banker playbook)**.
+- **Portfolio Explorer:** Upload batch CSV files, inspect Pandera schema sanitization audits, explore the **2x2 Value-Risk Strategic Matrix**, and export targeted retention lists.
 - **Business Simulator:** Adjust CLV ($500), Offer Cost ($50), and Save Rate (30%) to simulate campaign profit and examine cumulative decile gain curves.
-- **Model Insights:** Inspect cross-validation benchmarks, ROC/PR curves, reliability diagrams, and fairness parity tables.
+- **Model Insights:** Inspect cross-validation benchmarks, ROC/PR curves, dual-panel reliability subplots, decile calibration audits, and fairness parity tables.
+- **Developer API Console:** Interactive in-browser REST API simulator, cURL/Python/JS code generators, and container deployment specifications.
 
 ---
 
