@@ -17,10 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Streamlit App
+        env:
+          INPUT_URL: ${{ inputs.app_url }}
+          SECRET_URL: ${{ secrets.STREAMLIT_APP_URL }}
+          VAR_URL: ${{ vars.STREAMLIT_APP_URL }}
         run: |
-          TARGET_URL="${{ github.event.inputs.app_url || secrets.STREAMLIT_APP_URL || vars.STREAMLIT_APP_URL }}"
+          TARGET_URL="${INPUT_URL:-${SECRET_URL:-$VAR_URL}}"
           if [ -z "$TARGET_URL" ]; then
-            echo "ℹ️ No STREAMLIT_APP_URL secret or variable configured. Skipping keep-alive ping."
+            echo "No STREAMLIT_APP_URL secret or variable configured. Skipping keep-alive ping."
             echo "To enable automatic keep-alive pings, add STREAMLIT_APP_URL in repo Settings -> Secrets and variables -> Actions."
             exit 0
           fi
@@ -30,7 +34,7 @@ jobs:
           echo "Response HTTP Status: $HTTP_STATUS"
 
           if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
-            echo "✅ Streamlit app is active and healthy!"
+            echo "Streamlit app is active and healthy!"
           else
-            echo "⚠️ Warning: Received HTTP status $HTTP_STATUS from Streamlit app."
+            echo "Warning: Received HTTP status $HTTP_STATUS from Streamlit app."
           fi
