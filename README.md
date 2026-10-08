@@ -49,7 +49,7 @@ This project implements a leak-free, cost-sensitive machine learning architectur
 
 ## 🏗️ System Architecture
 
-![arch](./public/Customer%20Churn%20Prediction%20Pipeline.png)
+![arch](./public/Bank%20Churn%20System%20Architecture.png)
 
 ---
 

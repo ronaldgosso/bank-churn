@@ -134,6 +134,13 @@ with col_overview_left:
     )
 
 with col_overview_right:
+    hero_img = PROJECT_ROOT / "public" / "fintech_decision_hero.png"
+    if hero_img.exists():
+        st.image(
+            str(hero_img),
+            caption="Prescriptive Decision Support & Predictive AI Flow",
+            use_container_width=True,
+        )
     st.info(
         """
         **Application Navigation**
