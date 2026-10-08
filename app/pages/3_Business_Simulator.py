@@ -201,6 +201,15 @@ st.success(
     f"on the holdout portfolio."
 )
 
+econ_img = PROJECT_ROOT / "public" / "retention_economics_concept.png"
+if econ_img.exists():
+    with st.expander("Cost-Sensitive Retention Economics & Optimization Formula", expanded=False):
+        st.image(
+            str(econ_img),
+            caption="Mathematical Trade-off: CLV vs. Intervention Offer Cost & Empirical Churn Capture",
+            use_container_width=True,
+        )
+
 st.divider()
 st.subheader("3. Interactive Sensitivity & Gain Analytics")
 

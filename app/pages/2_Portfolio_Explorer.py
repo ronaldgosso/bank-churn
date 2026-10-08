@@ -129,6 +129,14 @@ else:
         else:
             st.success("All 10 modeling features strictly adhere to production Pandera schema with zero missing values.")
 
+        pipeline_img = PROJECT_ROOT / "public" / "sanitization_pipeline_flow.png"
+        if pipeline_img.exists():
+            st.image(
+                str(pipeline_img),
+                caption="Portfolio Data Sanitization & Ingestion Flow Architecture",
+                use_container_width=True,
+            )
+
     # 2. Run batch inference
     with st.spinner("Executing batch inference across portfolio..."):
         scored_df = predict_batch(sanitized_df, model=model, threshold=threshold)
