@@ -3,20 +3,23 @@
 import py_compile
 from pathlib import Path
 
+import numpy as np
 from utils import (
     COLOR_HIGH,
     COLOR_LOW,
     COLOR_MED,
     get_cached_business_summary,
     get_cached_fairness_summary,
+    get_cached_holdout_predictions,
     get_cached_metadata,
     get_cached_metrics,
     get_cached_model,
     get_cached_model_comparison,
+    get_cached_test_data,
     get_sample_portfolio,
 )
 
-from churn.config import ALL_FEATURE_COLS
+from churn.config import ALL_FEATURE_COLS, find_project_root
 
 
 def test_color_palette_constants() -> None:
@@ -83,3 +86,27 @@ def test_app_pages_syntax_compilation() -> None:
     for py_file in py_files:
         compiled = py_compile.compile(str(py_file), doraise=True)
         assert compiled is not None
+
+
+def test_find_project_root() -> None:
+    """Verify that find_project_root discovers canonical repository root."""
+    root = find_project_root()
+    assert root.exists()
+    assert (root / "pyproject.toml").exists()
+
+
+def test_cached_test_data_and_holdout_predictions() -> None:
+    """Verify that test dataset and holdout predictions load without error."""
+    test_df = get_cached_test_data()
+    assert not test_df.empty
+    assert "Exited" in test_df.columns
+    assert len(test_df) >= 100
+    for col in ALL_FEATURE_COLS:
+        assert col in test_df.columns
+
+    y_true, y_prob = get_cached_holdout_predictions()
+    assert len(y_true) == len(y_prob)
+    assert len(y_true) >= 100
+    assert set(np.unique(y_true)).issubset({0, 1})
+    assert all(0.0 <= p <= 1.0 for p in y_prob)
+

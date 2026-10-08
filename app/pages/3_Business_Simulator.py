@@ -20,6 +20,7 @@ from utils import (
     COLOR_PRIMARY,
     apply_custom_styles,
     get_cached_business_summary,
+    get_cached_holdout_predictions,
     get_cached_model,
     get_cached_test_data,
 )
@@ -53,14 +54,23 @@ test_df = get_cached_test_data()
 model, _ = get_cached_model()
 biz_summary = get_cached_business_summary()
 
-if test_df.empty or "Exited" not in test_df.columns:
-    st.error("Test dataset not available for interactive simulation.")
-    st.stop()
+# Extract ground truth and predicted probabilities seamlessly
+y_true: np.ndarray | None = None
+y_prob: np.ndarray | None = None
 
-# Score test dataset probabilities
-X_test = test_df.drop(columns=["Exited"])
-y_true = test_df["Exited"].values
-y_prob = model.predict_proba(X_test)[:, 1]
+if not test_df.empty and "Exited" in test_df.columns:
+    y_true = test_df["Exited"].to_numpy().astype(int)
+    if "churn_probability" in test_df.columns:
+        y_prob = test_df["churn_probability"].to_numpy().astype(float)
+    elif model is not None:
+        try:
+            X_test = test_df.drop(columns=["Exited"])
+            y_prob = model.predict_proba(X_test)[:, 1].astype(float)
+        except Exception:
+            y_prob = None
+
+if y_true is None or y_prob is None or len(y_true) == 0:
+    y_true, y_prob = get_cached_holdout_predictions()
 
 # Interactive Controls
 st.subheader("1. Campaign Economics & Budget Parameters")
