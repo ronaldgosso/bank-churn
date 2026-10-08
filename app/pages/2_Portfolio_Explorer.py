@@ -29,13 +29,13 @@ from churn.predict import predict_batch
 
 st.set_page_config(
     page_title="Portfolio Explorer · Bank Churn",
-    page_icon="📁",
+    page_icon=":material/folder_open:",
     layout="wide",
 )
 
 apply_custom_styles()
 
-st.title("📁 Portfolio Explorer & Batch Scoring")
+st.title("Portfolio Explorer & Batch Scoring")
 st.markdown(
     "Upload customer portfolio files (CSV) or load demo records to run batch inference, "
     "analyze risk cohort distributions, and export targeted retention lists."
@@ -62,13 +62,13 @@ with col_demo:
     sample_df = get_sample_portfolio()
     sample_csv = sample_df.to_csv(index=False).encode("utf-8")
     st.download_button(
-        label="📥 Download Template CSV (50 rows)",
+        label="Download Template CSV (50 rows)",
         data=sample_csv,
         file_name="bank_churn_sample_template.csv",
         mime="text/csv",
         use_container_width=True,
     )
-    load_demo = st.button("📂 Load 2,000 Holdout Test Records", use_container_width=True)
+    load_demo = st.button("Load 2,000 Holdout Test Records", use_container_width=True)
 
 # Determine working DataFrame
 df_to_score: pd.DataFrame | None = None
@@ -81,14 +81,14 @@ if uploaded_file is not None:
         missing_cols = [c for c in ALL_FEATURE_COLS if c not in df_uploaded.columns]
         if missing_cols:
             st.error(
-                f"❌ Uploaded CSV is missing required feature columns: **{', '.join(missing_cols)}**. "
+                f"Uploaded CSV is missing required feature columns: **{', '.join(missing_cols)}**. "
                 f"Please ensure all required columns are present."
             )
         else:
             df_to_score = df_uploaded
             source_name = uploaded_file.name
     except Exception as e:
-        st.error(f"❌ Failed to parse uploaded CSV: {e}")
+        st.error(f"Failed to parse uploaded CSV: {e}")
 
 elif load_demo or ("df_to_score" in st.session_state and st.session_state.get("is_demo", False)):
     demo_data = get_cached_test_data()
@@ -102,7 +102,7 @@ elif load_demo or ("df_to_score" in st.session_state and st.session_state.get("i
         st.warning("Demo dataset not found in data/processed/test.csv.")
 
 if df_to_score is None:
-    st.info("👆 Please upload a customer CSV file or click **Load 2,000 Holdout Test Records** above.")
+    st.info("Please upload a customer CSV file or click **Load 2,000 Holdout Test Records** above.")
 else:
     # Run batch inference
     with st.spinner("Executing batch inference across portfolio..."):
@@ -220,7 +220,7 @@ else:
     # Download Scored CSV
     export_csv = filtered_df.to_csv(index=False).encode("utf-8")
     st.download_button(
-        label=f"💾 Download Filtered Campaign CSV ({len(filtered_df):,} rows)",
+        label=f"Download Filtered Campaign CSV ({len(filtered_df):,} rows)",
         data=export_csv,
         file_name="targeted_retention_campaign.csv",
         mime="text/csv",

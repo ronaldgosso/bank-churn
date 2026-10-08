@@ -31,13 +31,13 @@ from utils import (
 
 st.set_page_config(
     page_title="Model Insights · Bank Churn",
-    page_icon="📊",
+    page_icon=":material/insights:",
     layout="wide",
 )
 
 apply_custom_styles()
 
-st.title("📊 Model Insights & Audit")
+st.title("Model Insights & Audit")
 st.markdown(
     "Transparent technical audit of the bank churn engine: cross-validation benchmarks, "
     "holdout ROC/PR curves, probability calibration (reliability diagram), global SHAP importance, and fairness metrics."
@@ -97,7 +97,7 @@ if not comp_df.empty:
         use_container_width=True,
     )
     st.caption(
-        "🏆 **Winner Selection:** Tuned XGBoost achieved highest CV PR-AUC (0.7011 ± 0.0239) and ROC-AUC (0.8640 ± 0.0090). "
+        "**Model Selection:** Tuned XGBoost achieved highest CV PR-AUC (0.7011 ± 0.0239) and ROC-AUC (0.8640 ± 0.0090). "
         "Wrapped with Isotonic calibration to minimize Brier score down to 0.0994 on holdout test set."
     )
 
@@ -335,7 +335,7 @@ with fair_c2:
         )
 
 st.info(
-    "⚖️ **Fairness Governance Disclosure:** Selection rate disparities primarily reflect underlying base-rate differences "
+    "**Fairness Governance Disclosure:** Selection rate disparities primarily reflect underlying base-rate differences "
     "in historical churn rates (e.g., German accounts churn at 30% vs 17% in France). Within each group, model discriminative "
     "ability remains strong (ROC-AUC > 0.85 across all segments). Regular audits are mandated to ensure retention offer allocations "
     "remain equitable."
