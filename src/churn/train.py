@@ -16,9 +16,12 @@ from sklearn.pipeline import Pipeline
 from xgboost import XGBClassifier
 
 from churn.config import (
+    METADATA_PATH,
+    MODEL_PATH,
     REPORTS_DIR,
     SEED,
     TARGET,
+    TRAIN_DATA_PATH,
 )
 from churn.data import load_train
 from churn.evaluate import evaluate_cv
@@ -470,3 +473,158 @@ def run_all_experiments(
         "best_params": params_record,
         "ablation": ablation_results,
     }
+
+
+def train_and_save_production_model(
+    config: str = "default",
+    tune: bool = False,
+    model_name: str = "xgboost",
+    model_path: Path | str = MODEL_PATH,
+    metadata_path: Path | str = METADATA_PATH,
+    random_state: int = SEED,
+) -> dict[str, Any]:
+    """Train, calibrate, and serialize production model and metadata.
+
+    Parameters
+    ----------
+    config : str, optional
+        Configuration profile name, default 'default'.
+    tune : bool, optional
+        Whether to re-run hyperparameter optimization, default False.
+    model_name : str, optional
+        Model family, default 'xgboost'.
+    model_path : Path | str, optional
+        Destination model file.
+    metadata_path : Path | str, optional
+        Destination metadata file.
+    random_state : int, optional
+        Random seed.
+
+    Returns
+    -------
+    dict[str, Any]
+        Metadata record of serialized model.
+    """
+    import datetime
+    import hashlib
+    import importlib.metadata
+
+    import joblib
+
+    from churn.business import optimal_threshold
+    from churn.data import load_train, make_split
+
+    print(f"[{datetime.datetime.now(datetime.UTC).isoformat()}] Starting production model training pipeline...")
+
+    # Ensure train dataset exists
+    if not TRAIN_DATA_PATH.exists():
+        print("Processed train dataset missing. Running make_split()...")
+        make_split(random_state=random_state)
+
+    train_df = load_train()
+    X = train_df.drop(columns=[TARGET])
+    y = train_df[TARGET]
+
+    # Calculate data SHA-256 hash
+    with open(TRAIN_DATA_PATH, "rb") as f:
+        data_hash = hashlib.sha256(f.read()).hexdigest()
+
+    # Determine hyperparameters
+    if tune:
+        print("Tuning hyperparameters via Optuna (50 trials)...")
+        best_params, _, _ = tune_model_optuna(model_name, X, y, n_trials=50, random_state=random_state)
+    elif (REPORTS_DIR / "best_params.json").exists():
+        with open(REPORTS_DIR / "best_params.json", encoding="utf-8") as f:
+            saved_info = json.load(f)
+        best_params = saved_info.get("best_params", {})
+    else:
+        # Default tuned parameters for XGBoost
+        best_params = {
+            "n_estimators": 275,
+            "learning_rate": 0.0566,
+            "max_depth": 3,
+            "min_child_weight": 3,
+            "subsample": 0.812,
+            "colsample_bytree": 0.714,
+            "scale_pos_weight": 1.41,
+        }
+
+    # Build base pipeline
+    base_pipeline = build_pipeline(model_name, random_state=random_state, **best_params)
+
+    # Cross-validation performance check
+    print("Evaluating 5-fold cross-validation...")
+    mean_m, std_m, _ = evaluate_cv(base_pipeline, X, y, n_splits=5, random_state=random_state)
+
+    # Wrap in Isotonic Calibration
+    print("Fitting calibrated classifier on full training split...")
+    calibrated_clf = CalibratedClassifierCV(
+        estimator=base_pipeline,
+        method="isotonic",
+        cv=5,
+    )
+    calibrated_clf.fit(X, y)
+
+    # Compute decision threshold
+    opt_t = optimal_threshold()
+
+    # Collect library versions
+    lib_names = ["xgboost", "lightgbm", "scikit-learn", "pandas", "numpy", "joblib", "pydantic"]
+    versions = {}
+    for lib in lib_names:
+        try:
+            versions[lib] = importlib.metadata.version(lib)
+        except importlib.metadata.PackageNotFoundError:
+            versions[lib] = "unknown"
+
+    # Save model artifact
+    m_dest = Path(model_path)
+    meta_dest = Path(metadata_path)
+    m_dest.parent.mkdir(parents=True, exist_ok=True)
+    meta_dest.parent.mkdir(parents=True, exist_ok=True)
+
+    joblib.dump(calibrated_clf, m_dest)
+    print(f"Serialized production model to {m_dest} ({m_dest.stat().st_size / 1024:.1f} KB)")
+
+    metadata = {
+        "model_architecture": f"CalibratedClassifierCV(estimator=Pipeline({model_name}), method='isotonic', cv=5)",
+        "model_name": model_name,
+        "config_profile": config,
+        "training_timestamp_utc": datetime.datetime.now(datetime.UTC).isoformat(),
+        "random_seed": random_state,
+        "decision_threshold": round(opt_t, 4),
+        "data_hash_sha256": data_hash,
+        "training_sample_count": len(train_df),
+        "features": list(X.columns),
+        "cv_metrics_mean": {k: round(v, 4) for k, v in mean_m.items()},
+        "cv_metrics_std": {k: round(v, 4) for k, v in std_m.items()},
+        "hyperparameters": best_params,
+        "library_versions": versions,
+    }
+
+    with open(meta_dest, "w", encoding="utf-8") as f:
+        json.dump(metadata, f, indent=2)
+
+    print(f"Saved metadata to {meta_dest}")
+    return metadata
+
+
+def main() -> None:
+    """CLI entrypoint for training the bank churn model."""
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Bank Customer Churn Model Training CLI")
+    parser.add_argument("--config", type=str, default="default", help="Config profile name")
+    parser.add_argument("--tune", action="store_true", help="Re-run Optuna hyperparameter optimization")
+    parser.add_argument("--model-name", type=str, default="xgboost", help="Model architecture")
+    args = parser.parse_args()
+
+    train_and_save_production_model(
+        config=args.config,
+        tune=args.tune,
+        model_name=args.model_name,
+    )
+
+
+if __name__ == "__main__":
+    main()

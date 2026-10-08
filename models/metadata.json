@@ -1,0 +1,56 @@
+{
+  "model_architecture": "CalibratedClassifierCV(estimator=Pipeline(xgboost), method='isotonic', cv=5)",
+  "model_name": "xgboost",
+  "config_profile": "default",
+  "training_timestamp_utc": "2026-10-08T11:15:18.123633+00:00",
+  "random_seed": 42,
+  "decision_threshold": 0.3333,
+  "data_hash_sha256": "36c882c1b67be7d38d9b28ccd790dbbac9a910eab46f6111a53aca054aac77d1",
+  "training_sample_count": 8000,
+  "features": [
+    "CreditScore",
+    "Geography",
+    "Gender",
+    "Age",
+    "Tenure",
+    "Balance",
+    "NumOfProducts",
+    "HasCrCard",
+    "IsActiveMember",
+    "EstimatedSalary"
+  ],
+  "cv_metrics_mean": {
+    "roc_auc": 0.864,
+    "pr_auc": 0.7011,
+    "recall": 0.5423,
+    "precision": 0.7114,
+    "f1": 0.6153,
+    "brier_score": 0.1038
+  },
+  "cv_metrics_std": {
+    "roc_auc": 0.009,
+    "pr_auc": 0.0239,
+    "recall": 0.0308,
+    "precision": 0.0209,
+    "f1": 0.0271,
+    "brier_score": 0.0041
+  },
+  "hyperparameters": {
+    "n_estimators": 275,
+    "learning_rate": 0.05663051257158077,
+    "max_depth": 3,
+    "min_child_weight": 3,
+    "subsample": 0.8117694023777325,
+    "colsample_bytree": 0.7143425077713299,
+    "scale_pos_weight": 1.4100763971231878
+  },
+  "library_versions": {
+    "xgboost": "3.4.1",
+    "lightgbm": "4.7.0",
+    "scikit-learn": "1.9.1",
+    "pandas": "3.0.6",
+    "numpy": "2.5.3",
+    "joblib": "1.6.0",
+    "pydantic": "2.13.5"
+  }
+}
