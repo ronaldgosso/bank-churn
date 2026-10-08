@@ -225,8 +225,17 @@ else:
             "Standard Service (Low Risk / Modest Asset)": COLOR_LOW,
         }
 
+        if len(scored_df) > 5000:
+            scatter_sample_df = scored_df.sample(n=5000, random_state=42)
+            st.caption(
+                f"Displaying a representative stratified sample of 5,000 points "
+                f"(out of {len(scored_df):,} total) for responsive chart interaction."
+            )
+        else:
+            scatter_sample_df = scored_df
+
         quad_fig = px.scatter(
-            scored_df,
+            scatter_sample_df,
             x="churn_probability",
             y="Balance",
             color="strategic_priority",
@@ -341,17 +350,48 @@ else:
     ]
     available_disp_cols = [c for c in display_cols if c in filtered_df.columns]
 
-    st.dataframe(
-        filtered_df[available_disp_cols].style.format(
-            {
-                "churn_probability": "{:.2%}",
-                "Balance": "${:,.2f}",
-                "EstimatedSalary": "${:,.2f}",
-            }
-        ),
-        use_container_width=True,
-        height=380,
-    )
+    if filtered_df.empty:
+        st.warning("No customers match the active filter criteria. Please adjust your filters above.")
+    else:
+        col_cfg = {
+            "churn_probability": st.column_config.ProgressColumn(
+                "Churn Risk",
+                help="Calibrated probability of customer churn (0.0 to 1.0)",
+                format="%.2f",
+                min_value=0.0,
+                max_value=1.0,
+            ),
+            "Balance": st.column_config.NumberColumn(
+                "Account Balance",
+                help="Customer account balance in USD",
+                format="$%.2f",
+            ),
+            "EstimatedSalary": st.column_config.NumberColumn(
+                "Estimated Salary",
+                help="Estimated annual salary in USD",
+                format="$%.2f",
+            ),
+            "contact_recommendation": st.column_config.CheckboxColumn(
+                "Contact",
+                help="Recommended for retention outreach",
+            ),
+        }
+
+        if len(filtered_df) > 5000:
+            st.caption(
+                f"Displaying top **5,000** of **{len(filtered_df):,}** matching customers in the preview table. "
+                f"The complete dataset ({len(filtered_df):,} rows) will be exported via the download button below."
+            )
+            preview_df = filtered_df[available_disp_cols].head(5000)
+        else:
+            preview_df = filtered_df[available_disp_cols]
+
+        st.dataframe(
+            preview_df,
+            column_config=col_cfg,
+            use_container_width=True,
+            height=380,
+        )
 
     # Download Scored CSV
     export_csv = filtered_df.to_csv(index=False).encode("utf-8")
