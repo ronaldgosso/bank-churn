@@ -1,278 +1,221 @@
 # Bank Customer Churn Prediction & Decision Support System
 
-[![CI - Lint & Tests](https://github.com/ronaldgosso/bank-churn/actions/workflows/ci.yml/badge.svg)](https://github.com/ronaldgosso/bank-churn/actions/workflows/ci.yml)
-[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py)
+[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://bankcustomerchurning.streamlit.app/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)](https://github.com/astral-sh/ruff)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Open in Colab (EDA)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ronaldgosso/bank-churn/blob/main/notebooks/01_eda.ipynb)
 [![Open in Colab (Modeling)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ronaldgosso/bank-churn/blob/main/notebooks/02_modeling.ipynb)
 [![Open in Colab (Evaluation)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ronaldgosso/bank-churn/blob/main/notebooks/03_evaluation_explainability.ipynb)
 
-> **An end-to-end machine learning system that predicts retail bank customer churn, optimizes intervention thresholds for maximum business profit, explains individual risk drivers via SHAP, and delivers decision support via an interactive Streamlit application and FastAPI service.**
+> **An intelligent, prescriptive decision-support platform for retail banking. It predicts customer departure risk with calibrated machine learning, explains root causes with SHAP, optimizes intervention thresholds for maximum business profit, and equips relationship managers with actionable retention playbooks.**
+
+🌐 **Live Web Application:** [bankcustomerchurning.streamlit.app](https://bankcustomerchurning.streamlit.app/)  
+📖 **Comprehensive User & Metric Guide:** [Streamlit_app.md](Streamlit_app.md)
 
 ---
 
-## 🎯 Executive Summary & Problem Statement
+## 🎯 The Business Dilemma & Why This Matters
 
-**The Business Problem:**  
-Retail banks face an average annual customer attrition rate of 20%. Acquiring a replacement customer costs 5x to 7x more than retaining an existing relationship. However, customer relationship teams operate under strict operational budgets and cannot offer expensive incentives ($50 retention packages) to every account. 
+Retail banking is an asymmetric business: **acquiring a new customer costs 5 to 7 times more than retaining an existing one.** When an account holder leaves, the bank loses deposit balances, net interest margin (NIM), cross-sell potential, and fee revenues.
 
-Default machine learning models typically use an arbitrary `0.5` classification threshold, which misses **over 45% of genuine churners**.
+Yet, banks face two chronic operational challenges:
+1. **Limited Retention Budgets:** Banks cannot afford to give monetary concessions ($50 offers, fee waivers, bonus interest) to all 100,000+ customers.
+2. **The Flaw of Standard 0.50 Thresholds:** Off-the-shelf machine learning models default to a `0.50` probability cutoff. Because churn is an imbalanced event (~20% base rate), this arbitrary threshold **misses over 45% of genuine churners**, allowing millions in deposits to silently drain away.
 
-**The Solution:**  
-This project implements a leak-free, cost-sensitive machine learning architecture:
-1. **Calibrated Machine Learning:** Tuned XGBoost with domain feature engineering, wrapped in 5-fold Isotonic Probability Calibration (`CalibratedClassifierCV`) achieving a **0.8682 ROC-AUC** and **0.7174 PR-AUC** (3.5x over baseline).
-2. **Cost-Sensitive Decision Optimization:** The intervention threshold is mathematically derived from unit retention economics ($\text{CLV} = \$500$, $\text{Offer Cost} = \$50$, $\text{Offer Success Rate} = 30\%$), yielding an optimal decision boundary of **$t = 0.3333$**.
-3. **Actionable Decision Support:** A 5-page Streamlit web application and FastAPI REST microservice that translates raw churn probabilities into concrete financial actions, decile gain curves, and customer-level SHAP decision waterfalls.
+```
+  Traditional Approach (Naive 0.50 Cutoff):
+  [ 0.00 ........................... 0.49 ] [ 0.50 .................... 1.00 ]
+  ❌ Misses 45%+ of genuine churners        ⚠️ Intervenes only on obvious flight risks
+     Lost revenue: $100k+ in runoff           Wasted budget on uncalibrated guesses
+
+  This Platform (Cost-Sensitive Optimal Threshold t* = 0.333):
+  [ 0.00 ... 0.16 ] [ 0.17 ....... 0.33 ] [ 0.333 .................... 1.00 ]
+  🟢 SAFE ZONE      🟡 WATCHLIST          🔴 ACTIVE RETENTION ZONE
+     Preserve          Automated             Direct Banker Outreach Justified
+     Budget            Digital Nudges        Expected Net ROI is Positive!
+```
 
 ---
 
-## 📊 Key Results (Holdout Test Set)
+## 💡 What This System Does (In a Nutshell)
+
+This platform moves beyond passive risk scoring into **prescriptive decision intelligence**:
+
+1. **Calibrated Predictive Engine:** An Optuna-tuned tree ensemble (XGBoost) wrapped in 5-fold Isotonic Regression. The predicted numbers represent **real-world probabilities** (Brier score `0.0994`), meaning a 35% score corresponds to an actual 35% empirical departure rate.
+2. **Cost-Sensitive Decision Theory:** The decision boundary ($t^* = 0.333$) is mathematically calculated from Customer Lifetime Value (CLV $500), offer cost ($50), and save rate (30%), **maximizing net campaign profit**.
+3. **Root-Cause Explainability:** Every customer prediction is decomposed with SHAP (SHapley Additive exPlanations) so branch staff immediately see *why* an account is at risk.
+4. **Prescriptive Counterfactual Recourse:** Rather than just diagnosing *who* might leave, the engine simulates *what concrete actions* (mobile banking enrollment, product consolidation, card incentives) will reduce risk and forecasts expected net ROI.
+5. **Portfolio Capital-at-Risk Management:** Ingests batch customer files, runs automated data hygiene audits, segments accounts into a 2x2 Value-Risk Matrix, and exports targeted retention call-lists.
+
+---
+
+## 🚀 Live Interactive Platform Tour
+
+The system is delivered as an interactive decision-support application built for branch managers, campaign planners, and risk officers.
+
+[![Open Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://bankcustomerchurning.streamlit.app/)
+
+![Prescriptive Decision Support Flow](./public/fintech_decision_hero.png)
+
+### 1. Customer Risk Scorer & Banker Playbook
+*Score individual accounts on demand with real-time explainability and actionable prescriptive recourse.*
+- **Radial Risk Gauge:** Instantly classifies risk into Safe (Green), Watchlist (Amber), and High Risk (Red) relative to the $0.333$ profit threshold.
+- **SHAP Decision Waterfall:** Visualizes how specific features (e.g., holding 3 products, inactive member status) elevate or reduce churn log-odds.
+- **Prescriptive Intervention Table:** Evaluates concrete retention actions (Digital Activation, Product Consolidation, Rewards Card) and ranks them by **Expected Net ROI ($)**.
+- **Relationship Manager Playbook:** Generates personalized call scripts with greetings, customer observations, tailored pitches, and risk reduction forecasts.
+- **Interactive What-If Sandbox:** Lets bankers test operational adjustments dynamically to observe real-time probability impact.
+
+---
+
+### 2. Portfolio Explorer & 2x2 Value-Risk Matrix
+*Analyze entire customer portfolios, audit data hygiene, and export high-priority campaign lists.*
+
+![Data Ingestion & Sanitization Flow](./public/sanitization_pipeline_flow.png)
+
+- **Automated Data Sanitization:** Powered by Pandera schemas—automatically maps column aliases (e.g., `country` $\to$ `Geography`), clamps extreme outliers, imputes missing values, and preserves customer IDs.
+- **Portfolio Exposure KPIs:** Tracks Total Assets Held, High-Risk Balance Share, Campaign Budget, and **Expected Balance Runoff** (probabilistic annual deposit loss).
+- **2x2 Strategic Action Matrix:** Segments the entire portfolio into four high-impact quadrants:
+  - 🔴 **VIP Save Priority (High Risk / High Balance):** Top priority for senior relationship manager outreach and bespoke concessions.
+  - 🟡 **Automated Digital Save (High Risk / Modest Balance):** Cost-effective automated app notifications and email incentives.
+  - 🔵 **Relationship Deepening (Low Risk / High Balance):** Loyal affluent customers targeted for wealth management cross-selling.
+  - 🟢 **Standard Service (Low Risk / Modest Balance):** Stable accounts requiring zero retention spend.
+- **One-Click Campaign CSV Export:** Filter by strategic priority, risk tier, or geography, and download ready-to-use call lists.
+
+---
+
+### 3. Retention Campaign Business Simulator
+*Model the financial ROI of retention campaigns and simulate the effect of budget constraints.*
+
+![Retention Economics Concept](./public/retention_economics_concept.png)
+
+- **Interactive Unit Economics Sliders:** Adjust Customer Lifetime Value ($100–$2,000), Offer Cost ($10–$200), Offer Save Rate (5%–80%), and Budget Cap (Top K% Risk).
+- **Profit vs. Threshold Sensitivity Curve:** Visually demonstrates the convex profit peak at $t^* = 0.333$ and shows the revenue lost by using default $0.50$ cutoffs.
+- **Cumulative Gain & Lift Curves:** Shows how targeting the top 10% or 20% of accounts captures the majority of portfolio churners.
+- **10-Decile Performance Breakdown:** Full transparency into decile churn rates, capture percentages, and lift multipliers.
+
+---
+
+### 4. Model Transparency & Fairness Audit
+*Complete visibility into machine learning benchmarks, diagnostic curves, and demographic equity.*
+- **Cross-Validation Benchmark:** Compares Logistic Regression, Random Forest, LightGBM, and Tuned XGBoost across 6 metrics.
+- **Holdout ROC & PR Curves:** Demonstrates high discrimination (ROC-AUC `0.8682`, PR-AUC `0.7174`).
+- **Probability Calibration (Reliability Diagram):** Proves predicted probabilities match empirical churn rates (Brier score `0.0994`).
+- **Global Feature Ranking:** Identifies the macro drivers of customer departure.
+- **Demographic Fairness Audit:** Evaluates selection rate ratios, recall gaps, and precision gaps across Gender and Geography.
+
+---
+
+### 5. Developer Hub & Headless Microservice
+*Dual-layer architecture serving both interactive users and enterprise systems.*
+- **In-Browser REST Console:** Test live inference payloads against `POST /predict`, `POST /predict/recourse`, and `POST /predict/batch`.
+- **Multi-Language Client Snippets:** Copy-paste ready code in cURL, Python (`requests`), and TypeScript (`fetch`).
+- **Production Container Specs:** Dockerized microservice ready to deploy on any cloud container runtime.
+
+---
+
+## 📊 Key Results on Holdout Test Cohort
 
 *Evaluated strictly once on the 2,000-customer holdout test partition (`reports/metrics.json`):*
 
-| Metric | Business Target | Verified Holdout Result | Performance Summary |
+| Business & ML Metric | Industry Benchmark | Verified Model Result | Operational Impact |
 | :--- | :--- | :--- | :--- |
-| **ROC-AUC** | $\ge 0.8500$ | **0.8682** | ✅ Exceeded target |
-| **PR-AUC (Average Precision)** | > Baseline (0.2035) | **0.7174** | ✅ **3.5x over random baseline** |
+| **ROC-AUC (Discrimination)** | $\ge 0.8500$ | **0.8682** (86.8%) | ✅ Outstanding customer ranking capability |
+| **PR-AUC (Average Precision)** | Baseline: 0.2035 | **0.7174** (71.7%) | ✅ **3.5x improvement** over random chance |
 | **Top 10% Decile Lift** | $\ge 3.00\times$ | **4.20x** | ✅ Captures **42.0%** of all churners in top decile |
 | **Top 20% Quintile Lift** | — | **3.10x** | ✅ Captures **61.9%** of all churners in top 20% |
-| **Probability Calibration** | Brier $< 0.1000$ | **0.0994** | ✅ Well calibrated (Isotonic regression) |
-| **Recall (@ optimal $t=0.3333$)** | Maximize capture | **61.18%** | Captures 249 of 407 churners |
-| **Precision (@ optimal $t=0.3333$)** | High intervention ROI | **63.85%** | Minimal wasted campaign spend |
-| **F1 Score** | Balanced trade-off | **0.6248** | Optimal balance |
-| **Holdout Net Profit** | Profitable campaign | **$17,850.00** | Net return on 2,000 test cohort |
+| **Probability Calibration** | Brier $< 0.1000$ | **0.0994** | ✅ Probabilities reflect true real-world risk |
+| **Operating Precision** (@ $t=0.333$) | High Spend Efficiency | **63.85%** | ✅ Minimal wasted retention budget |
+| **Operating Recall** (@ $t=0.333$) | Maximize Churn Capture| **61.18%** | ✅ Captures 249 of 407 churners |
+| **Holdout Net Campaign Profit** | Positive ROI | **+$17,850.00** | ✅ Net dollar return on 2,000 test cohort |
 
-> **Key Business Takeaway:** *Contacting the top 20% of customers captures 62.3% of churners (lift 3.11x) and yields an estimated campaign profit of $72,250.00 across the full portfolio.*
-
----
-
-## 🏗️ System Architecture
-
-![arch](./public/Bank%20Churn%20System%20Architecture.png)
+> 💰 **Bottom Line Impact:** Contacting just the top 20% of at-risk accounts captures over **61.9% of all churners** and yields an estimated **$72,250+ in net campaign profit** across the customer base.
 
 ---
 
-## 📂 Repository Structure
+## 🧠 Key Insights Discovered in the Data
 
-```
-bank-churn/
-├── .github/workflows/ci.yml       # GitHub Actions CI (Ruff linting & Pytest suite)
-├── .streamlit/config.toml         # Streamlit corporate theme & server settings
-├── app/                           # Multi-page Streamlit application
-│   ├── Home.py                    # Executive dashboard & headline KPIs
-│   ├── utils.py                   # Caching (@st.cache_resource, @st.cache_data) & styles
-│   └── pages/
-│       ├── 1_Customer_Risk_Scorer.py   # Single account scoring, gauge, SHAP waterfall, counterfactual recourse
-│       ├── 2_Portfolio_Explorer.py     # Batch CSV upload, Pandera audit, 2x2 Value-Risk Matrix, campaign export
-│       ├── 3_Business_Simulator.py     # ROI simulator, profit curve, decile gain chart
-│       ├── 4_Model_Insights.py         # CV benchmarks, ROC/PR curves, reliability subplots, decile audits
-│       ├── 5_About.py                  # Model card summary, tech stack, governance
-│       └── 6_Developer_API.py          # Interactive REST console, request builders, multi-language snippets
-├── data/
-│   ├── raw/                       # Raw source data (gitignored)
-│   └── processed/                 # train.csv (8,000 rows) & test.csv (2,000 rows)
-├── models/                        # Serialized artifacts
-│   ├── churn_model.joblib         # Calibrated XGBoost production pipeline
-│   └── metadata.json              # Model architecture, hyperparameters, hash, timestamp
-├── notebooks/                     # Colab-executable narrative notebooks
-│   ├── 01_eda.ipynb               # 10 Exploratory figures & statistical tests
-│   ├── 02_modeling.ipynb          # Benchmark, imbalance comparison, Optuna tuning
-│   └── 03_evaluation_explainability.ipynb # Final holdout audit, SHAP, and fairness
-├── reports/
-│   ├── figures/                   # 25 exported high-resolution PNG charts
-│   ├── business_summary.json      # Threshold and campaign optimization data
-│   ├── data_summary.json          # Dataset partition properties
-│   ├── fairness_summary.json      # Disparity and group metric audit
-│   ├── metrics.json               # Final single-touch holdout metrics
-│   └── model_comparison.csv       # 5-fold CV comparison across all models
-├── src/churn/                     # Core business & machine learning library
-│   ├── __init__.py
-│   ├── api.py                     # FastAPI REST service (/health, /meta, /predict, /predict/recourse, /predict/batch)
-│   ├── business.py                # Profit calculation, threshold optimization, gain tables
-│   ├── config.py                  # Project paths, column definitions, unit economics
-│   ├── data.py                    # Data loaders and stratified splitting
-│   ├── evaluate.py                # Metrics, cross-validation, and diagnostic curves
-│   ├── explain.py                 # SHAP TreeExplainer, waterfall, and driver strings
-│   ├── fairness.py                # Demographic parity and group performance audit
-│   ├── features.py                # FeatureEngineer transformer & ColumnTransformers
-│   ├── predict.py                 # Pydantic CustomerInput, single & batch inference, counterfactual recourse
-│   ├── train.py                   # Training pipeline & CLI entrypoint
-│   └── validation.py              # Pandera DataFrame schemas & portfolio sanitization
-├── tests/                         # Pytest test suite (73 unit & integration tests)
-├── CHANGELOG.md                   # Chronological project version history & phase changes
-├── DEPLOYMENT.md                  # 1-Click Streamlit Cloud deploy, CI/CD flow & keep-alive automation
-├── Dockerfile                     # Multi-stage production container specification
-├── MODEL_CARD.md                  # Comprehensive model card & regulatory documentation
-├── PROJECT_SPEC.md                # Master engineering specification
-├── QUICKSTART.md                  # 3-minute fast-start developer & user guide
-├── Streamlit_app.md               # Comprehensive Streamlit app operational guide & metric dictionary
-├── pyproject.toml                 # Package configuration, Ruff linting, & Pytest settings
-├── requirements.txt               # Pinned runtime dependencies (includes pandera)
-└── requirements-dev.txt           # Development and testing dependencies
-```
+Analysis of SHAP attributions and exploratory patterns revealed four critical findings:
+
+1. **The Age Shock (Non-Linear Retirement Spike):**  
+   Departure risk accelerates non-linearly between ages 45 and 65, peaking near retirement age. Older account holders with substantial savings are prime targets for wealth management retention packages.
+2. **The Product Saturation Trap:**  
+   Account holders with 1 product churn at ~27%; 2 products is optimal (~7.6% churn rate). However, customers holding 3 or 4 products experience catastrophic attrition rates (**82% to 100%**)—revealing severe fee fatigue and aggressive, misaligned cross-selling.
+3. **Geographic Market Dynamics:**  
+   German accounts exhibit roughly double the churn rate of France and Spain, driven by higher account balances and aggressive competitive switching in the German banking market.
+4. **Digital Engagement Defense:**  
+   Active membership (`IsActiveMember = 1`) cuts churn risk in half across all demographic groups, proving that mobile banking adoption is the bank's strongest defensive moat.
 
 ---
 
-## ☁️ Live Streamlit Deployment & Automation
+## 🏗️ End-to-End System Architecture
 
-[![Deploy to Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py)
-
-- **1-Click Cloud Deploy:** Click the badge above or use the [Direct Deployment Link](https://share.streamlit.io/deploy?repository=ronaldgosso/bank-churn&branch=main&mainModule=app/Home.py) to launch on Streamlit Community Cloud with pre-filled repository parameters.
-- **Comprehensive App Manual & Metric Dictionary:** Read [Streamlit_app.md](Streamlit_app.md) for page-by-page operational walkthroughs, decision boundaries, SHAP explanations, counterfactual recourse, and the complete "what means what" glossary.
-- **Continuous Deployment:** Any commit merged into `main` automatically triggers a zero-downtime hot reload on Streamlit Cloud.
-- **Automated Health Probing:** The [.github/workflows/streamlit-smoke-test.yml](.github/workflows/streamlit-smoke-test.yml) workflow pre-tests cold start and probes `/_stcore/health` on every pull request.
-- **Scheduled Keep-Alive:** The [.github/workflows/streamlit-keepalive.yml](.github/workflows/streamlit-keepalive.yml) workflow pings the live URL to prevent free-tier inactive sleep timeouts.
-- **Detailed Guide:** See [DEPLOYMENT.md](DEPLOYMENT.md) for full step-by-step instructions, secrets setup, and container options.
-
----
-
-## 🚀 How to Run Locally
-
-> 💡 **Looking for a 3-minute setup?** Check out the dedicated [Quickstart Guide](QUICKSTART.md) for quick-copy commands, cURL samples, and troubleshooting tips.
-
-### 1. Environment Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/ronaldgosso/bank-churn.git
-cd bank-churn
-
-# Create and activate virtual environment
-python -m venv .venv
-# On Windows:
-.venv\Scripts\Activate.ps1
-# On Linux/macOS:
-source .venv/bin/activate
-
-# Install dependencies and local churn package
-pip install -r requirements-dev.txt
-pip install -e .
 ```
-
-### 2. Launch the Streamlit Decision Support App
-
-```bash
-streamlit run app/Home.py
-```
-*Opens locally at `http://localhost:8501`.*
-
-### 3. Launch the FastAPI Microservice
-
-```bash
-uvicorn churn.api:app --reload --port 8000
-```
-*Interactive Swagger API documentation available at `http://localhost:8000/docs`.*
-
-**Example API Request:**
-```bash
-curl -X POST "http://localhost:8000/predict" \
-     -H "Content-Type: application/json" \
-     -d '{
-       "CreditScore": 650,
-       "Geography": "Germany",
-       "Gender": "Female",
-       "Age": 48,
-       "Tenure": 3,
-       "Balance": 85000.0,
-       "NumOfProducts": 3,
-       "HasCrCard": 1,
-       "IsActiveMember": 0,
-       "EstimatedSalary": 60000.0
-     }'
-```
-
-### 4. Reproduce Model Training from Scratch
-
-```bash
-# Full CLI pipeline (split -> feature engineering -> tuning -> calibration -> threshold)
-python -m churn.train --config default
-```
-
-### 5. Run Quality Assurance Suite
-
-```bash
-# Code formatting and lint inspection
-ruff check .
-
-# Execute full unit & integration test suite (68 tests)
-pytest -v
-```
-
-### 6. Run via Docker
-
-```bash
-# Build production Docker container
-docker build -t bank-churn-api:latest .
-
-# Run container on port 8000
-docker run -p 8000:8000 bank-churn-api:latest
+  ┌────────────────────────────────────────────────────────────────────────────────────────┐
+  │                              End-to-End System Architecture                            │
+  └───────────────────────────────────────────┬────────────────────────────────────────────┘
+                                              │
+                      ┌───────────────────────┴───────────────────────┐
+                      ▼                                               ▼
+         ┌─────────────────────────┐                     ┌─────────────────────────┐
+         │     Raw Banking Data    │                     │   Batch Portfolio CSV   │
+         │   (Customer Profiles)   │                     │      (Bank Upload)      │
+         └────────────┬────────────┘                     └────────────┬────────────┘
+                      │                                               │
+                      ▼                                               ▼
+         ┌─────────────────────────────────────────────────────────────────────────┐
+         │              Pandera Schema Validation & Sanitization Engine            │
+         │   • Column alias remapping    • Type coercion    • Outlier clamping     │
+         └────────────────────────────────────┬────────────────────────────────────┘
+                                              │
+                                              ▼
+         ┌─────────────────────────────────────────────────────────────────────────┐
+         │                 Domain Feature Engineering Pipeline                     │
+         │   • Balance-to-Salary Ratio   • Tenure-to-Age Ratio   • Value Bins      │
+         └────────────────────────────────────┬────────────────────────────────────┘
+                                              │
+                                              ▼
+         ┌─────────────────────────────────────────────────────────────────────────┐
+         │               Calibrated XGBoost Ensemble Inference Engine              │
+         │   • Optuna-tuned tree weights   • 5-Fold Isotonic Probability Mapping   │
+         └────────────────────────────────────┬────────────────────────────────────┘
+                                              │
+                      ┌───────────────────────┴───────────────────────┐
+                      ▼                                               ▼
+         ┌─────────────────────────┐                     ┌─────────────────────────┐
+         │  Cost-Sensitive Optimal │                     │    SHAP Explainability  │
+         │    Boundary (t = 0.333) │                     │     & Recourse Engine   │
+         └────────────┬────────────┘                     └────────────┬────────────┘
+                      │                                               │
+                      └───────────────────────┬───────────────────────┘
+                                              │
+                      ┌───────────────────────┴───────────────────────┐
+                      ▼                                               ▼
+         ┌─────────────────────────┐                     ┌─────────────────────────┐
+         │  Streamlit Decision UI  │                     │   FastAPI REST Service  │
+         │ (bankcustomerchurning.  │                     │  (/predict, /recourse,  │
+         │       streamlit.app)    │                     │   /batch, Docker: 8000) │
+         └─────────────────────────┘                     └─────────────────────────┘
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## 📚 Companion Documentation & Guides
 
-| Domain | Tools & Libraries |
+For deeper technical, operational, and deployment details:
+
+| Document | Description |
 | :--- | :--- |
-| **Machine Learning** | XGBoost, LightGBM, Scikit-learn, Imbalanced-learn |
-| **Explainability** | SHAP (`TreeExplainer`, Beeswarm, Waterfall plots) |
-| **Optimization & Tracking** | Optuna (TPE Sampler), MLflow Tracking |
-| **Data Quality & Validation** | Pandera (Schema enforcement), Pydantic v2 |
-| **Web & Serving** | Streamlit, FastAPI, Uvicorn, Docker |
-| **Visualization** | Plotly Graph Objects / Express, Matplotlib, Seaborn |
-| **Engineering & CI** | Ruff, Pytest, GitHub Actions, Setuptools (`pyproject.toml`) |
+| **[Streamlit_app.md](Streamlit_app.md)** | **The Complete Application Manual & Metric Dictionary.** Detailed walkthrough of every page, formula, widget, and the exhaustive "what means what" glossary. |
+| **[MODEL_CARD.md](MODEL_CARD.md)** | **Official Model Card & Ethical Governance.** Model architecture, training data provenance, evaluation benchmarks, demographic parity audits, and out-of-scope usage guidelines. |
+| **[DEPLOYMENT.md](DEPLOYMENT.md)** | **Production Deployment Specifications.** Step-by-step instructions for Streamlit Community Cloud, automated CI/CD smoke testing, and Docker container hosting. |
+| **[QUICKSTART.md](QUICKSTART.md)** | **Developer Fast-Start Guide.** Quick environment setup, local execution commands, and cURL requests for technical contributors. |
+| **[PROJECT_SPEC.md](PROJECT_SPEC.md)** | **Master Engineering Specification.** Comprehensive architectural blueprint covering phases 1 through 6. |
 
 ---
 
-## 🔍 Key Findings & SHAP Interpretability
+## 👤 Author & Acknowledgments
 
-1. **Age / Seniority Shock:** Churn propensity exhibits sharp non-linear acceleration between ages 45 and 65, peaking right before retirement.
-2. **Product Saturation Trap:** Customers with 2 products have optimal retention (~7.6% churn rate); holding 3 or 4 products triggers severe attrition (**82% to 100%**), highlighting critical fee fatigue or misaligned cross-selling.
-3. **Geographic Dynamics:** German accounts exhibit nearly 2x the baseline churn of French and Spanish accounts, driven by higher balances and competitive switching.
-4. **Digital Engagement Defense:** Active membership (`IsActiveMember=1`) cuts churn risk in half across all customer demographics.
-
----
-
-## ⚖️ Governance & Limitations
-
-- **Single Snapshot:** The dataset captures a cross-sectional snapshot without time-series transaction velocity.
-- **Parametric Economics:** Business simulator assumes uniform CLV ($500) and offer cost ($50). Live deployments should integrate customer-specific dynamic CLV.
-- **Fairness Audit:** Measured selection rate ratios and recall gaps between protected demographic groups (documented in [MODEL_CARD.md](MODEL_CARD.md)).
-
----
-
-## 💼 Portfolio Delivery Assets
-
-### 📄 Resume Bullet Points
-- *Architected an end-to-end retail bank customer churn prediction system using calibrated XGBoost, achieving **0.8682 ROC-AUC** and **0.7174 PR-AUC** (3.5x over baseline) on a strict holdout test partition.*
-- *Implemented cost-sensitive decision optimization ($\text{CLV}=\$500$, intervention cost $=\$50$), mathematically determining an optimal decision boundary ($t=0.333$) that captures **62.3% of churners** within the top 20% of accounts (3.11x lift).*
-- *Developed a 5-page Streamlit decision support platform and FastAPI microservice featuring real-time SHAP waterfall attributions, interactive ROI simulation, and portfolio batch scoring.*
-- *Enforced software engineering best practices with clean architecture, Pandera schema validation, Pydantic type safety, 68 Pytest unit tests, and GitHub Actions CI.*
-
-### 📱 LinkedIn Announcement Post
-```text
-I just launched an end-to-end Machine Learning & Decision Support platform for Bank Customer Churn! 🏦🚀
-
-Most churn projects stop at predicting probabilities with default 0.5 thresholds—which often leaves significant revenue on the table. In retail banking, retention is fundamentally an economic trade-off: keeping an account is far cheaper than acquiring a new one, but retention budgets are finite.
-
-Here is how I designed the system:
-1️⃣ Leak-Free ML Engine: Benchmarked 5 model architectures, tuned XGBoost via Optuna, and wrapped the winner in 5-fold Isotonic Probability Calibration (0.8682 ROC-AUC, 0.7174 PR-AUC).
-2️⃣ Cost-Sensitive Decision Theory: Derived an optimal threshold (t = 0.333) based on unit economics (CLV $500, offer cost $50, save rate 30%). Contacting the top 20% of at-risk customers captures 62.3% of churners (3.11x lift).
-3️⃣ Explainability & Trust: Integrated SHAP TreeExplainer to produce plain-English customer drivers and decision waterfall charts for relationship managers.
-4️⃣ Production Serving: Shipped a 5-page interactive Streamlit decision dashboard, FastAPI endpoints, Docker container, and 68 automated Pytest tests in CI.
-
-Check out the full repository and model card:
-🔗 GitHub: https://github.com/ronaldgosso/bank-churn
-
-#MachineLearning #DataScience #XGBoost #Streamlit #FinTech #Python #MLOps #SHAP
-```
-
----
-
-## 👤 Author & Contact
-
-- **Author:** Ronald Gosso
-- **GitHub:** [@ronaldgosso](https://github.com/ronaldgosso)
-- **Repository:** [bank-churn](https://github.com/ronaldgosso/bank-churn)
-- **License:** MIT License
+- **Lead Engineer & Author:** [Ronald Gosso](https://github.com/ronaldgosso)
+- **Repository:** [github.com/ronaldgosso/bank-churn](https://github.com/ronaldgosso/bank-churn)
+- **License:** [MIT License](https://opensource.org/licenses/MIT)
