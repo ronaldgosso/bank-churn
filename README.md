@@ -49,45 +49,7 @@ This project implements a leak-free, cost-sensitive machine learning architectur
 
 ## 🏗️ System Architecture
 
-```mermaid
-flowchart TD
-    subgraph Data Layer
-        A[Raw Kaggle Dataset<br/>10,000 Records] --> B[Pandera Schema Validation<br/>Data Integrity & Range Checks]
-        B --> C[Stratified 80/20 Split<br/>Seed 42]
-        C --> D[(Train Partition<br/>8,000 Rows)]
-        C --> E[(Holdout Test Set<br/>2,000 Rows)]
-    end
-
-    subgraph Feature Engineering & Preprocessing
-        D --> F[FeatureEngineer Transformer<br/>BalanceSalaryRatio, ProductsPerTenure, ZeroBalance, etc.]
-        F --> G[ColumnTransformer Pipeline<br/>StandardScaler + OneHotEncoder]
-    end
-
-    subgraph Modeling & Calibration
-        G --> H[5-Fold Stratified CV Benchmark<br/>Logistic Regression, Random Forest, LightGBM, XGBoost]
-        H --> I[Optuna Hyperparameter Tuning<br/>50 Trials TPE Sampler]
-        I --> J[Tuned XGBoost Winner<br/>CV PR-AUC: 0.7011]
-        J --> K[Isotonic Calibration<br/>CalibratedClassifierCV cv=5]
-    end
-
-    subgraph Decision Theory
-        K --> L[Cost-Sensitive Optimization<br/>CLV=$500, Cost=$50, SaveRate=30%]
-        L --> M[Optimal Threshold: t = 0.3333<br/>Risk Tiers: High / Medium / Low]
-    end
-
-    subgraph Evaluation & Auditing
-        E --> N[Strict Holdout Test Touch<br/>reports/metrics.json]
-        K --> N
-        N --> O[SHAP Explainability<br/>Global Impact + Customer Waterfalls]
-        N --> P[Demographic Fairness Audit<br/>Gender & Geography Disparity Checks]
-    end
-
-    subgraph Serving & Interfaces
-        K --> Q[Streamlit Decision App<br/>app/Home.py + 5 Pages]
-        K --> R[FastAPI REST Service<br/>src/churn/api.py /predict]
-        K --> S[CLI Training Engine<br/>python -m churn.train]
-    end
-```
+![arch](./public/Customer%20Churn%20Prediction%20Pipeline.png)
 
 ---
 
@@ -137,9 +99,11 @@ bank-churn/
 │   ├── train.py                   # Training pipeline & CLI entrypoint
 │   └── validation.py              # Pandera DataFrame schemas
 ├── tests/                         # Pytest test suite (68 unit & integration tests)
+├── CHANGELOG.md                   # Chronological project version history & phase changes
 ├── Dockerfile                     # Multi-stage production container specification
 ├── MODEL_CARD.md                  # Comprehensive model card & regulatory documentation
 ├── PROJECT_SPEC.md                # Master engineering specification
+├── QUICKSTART.md                  # 3-minute fast-start developer & user guide
 ├── pyproject.toml                 # Package configuration, Ruff linting, & Pytest settings
 ├── requirements.txt               # Pinned runtime dependencies
 └── requirements-dev.txt           # Development and testing dependencies
@@ -148,6 +112,8 @@ bank-churn/
 ---
 
 ## 🚀 How to Run Locally
+
+> 💡 **Looking for a 3-minute setup?** Check out the dedicated [Quickstart Guide](QUICKSTART.md) for quick-copy commands, cURL samples, and troubleshooting tips.
 
 ### 1. Environment Setup
 
