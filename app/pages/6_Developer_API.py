@@ -222,10 +222,24 @@ with tab_batch:
     if st.button("Execute Batch Prediction (3 records)", type="primary"):
         batch_df = pd.DataFrame(batch_records)
         scored_batch = predict_batch(batch_df, model=model, threshold=threshold)
+        b_col_cfg = {
+            "churn_probability": st.column_config.ProgressColumn(
+                "Churn Risk",
+                format="%.2f",
+                min_value=0.0,
+                max_value=1.0,
+            ),
+            "Balance": st.column_config.NumberColumn(
+                "Account Balance",
+                format="$%.2f",
+            ),
+            "contact_recommendation": st.column_config.CheckboxColumn("Contact"),
+        }
         st.dataframe(
             scored_batch[
                 ["churn_probability", "risk_tier", "contact_recommendation", "CreditScore", "Geography", "Age", "Balance"]
-            ].style.format({"churn_probability": "{:.2%}", "Balance": "${:,.2f}"}),
+            ],
+            column_config=b_col_cfg,
             use_container_width=True,
         )
 
