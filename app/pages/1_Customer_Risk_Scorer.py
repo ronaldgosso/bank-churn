@@ -235,19 +235,28 @@ else:
     out_col1, out_col2 = st.columns([1, 1])
 
     with out_col1:
+        st.markdown("#### Risk Assessment Gauge")
         # Plotly Gauge Chart
         gauge_fig = go.Figure(
             go.Indicator(
                 mode="gauge+number",
                 value=probability * 100,
-                domain={"x": [0, 1], "y": [0, 1]},
-                title={"text": "Predicted Churn Probability (%)", "font": {"size": 20}},
-                number={"suffix": "%", "valueformat": ".1f", "font": {"size": 36}},
+                domain={"x": [0.02, 0.98], "y": [0.02, 0.98]},
+                number={
+                    "suffix": "%",
+                    "valueformat": ".1f",
+                    "font": {"size": 36, "color": "#0f172a"},
+                },
                 gauge={
-                    "axis": {"range": [0, 100], "tickwidth": 1, "tickcolor": "darkblue"},
-                    "bar": {"color": "#1e293b", "thickness": 0.25},
+                    "axis": {
+                        "range": [0, 100],
+                        "tickwidth": 1,
+                        "tickcolor": "#64748b",
+                        "tickfont": {"size": 11},
+                    },
+                    "bar": {"color": "#1e293b", "thickness": 0.22},
                     "bgcolor": "white",
-                    "borderwidth": 2,
+                    "borderwidth": 1.5,
                     "bordercolor": "#cbd5e1",
                     "steps": [
                         {"range": [0, (0.5 * threshold) * 100], "color": "#dcfce7"},
@@ -259,14 +268,28 @@ else:
                     ],
                     "threshold": {
                         "line": {"color": "#b91c1c", "width": 4},
-                        "thickness": 0.75,
+                        "thickness": 0.8,
                         "value": threshold * 100,
                     },
                 },
             )
         )
-        gauge_fig.update_layout(height=280, margin={"t": 30, "b": 10, "l": 25, "r": 25})
-        st.plotly_chart(gauge_fig, use_container_width=True)
+        gauge_fig.update_layout(
+            autosize=True,
+            height=260,
+            margin={"t": 10, "b": 10, "l": 20, "r": 20},
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+        )
+        st.plotly_chart(
+            gauge_fig,
+            use_container_width=True,
+            config={"responsive": True, "displayModeBar": False},
+        )
+        st.caption(
+            f"Decision boundary: **{threshold:.1%}** · Safe (<{0.5 * threshold:.1%}), "
+            f"Watchlist (<{threshold:.1%}), High Risk (≥{threshold:.1%})"
+        )
 
     with out_col2:
         st.markdown("#### Operational Recommendation")
@@ -355,7 +378,7 @@ else:
             shap.plots.waterfall(shap_vals[0], max_display=7, show=False)
             plt.title(f"SHAP Waterfall (p = {probability:.2%})", fontsize=10, fontweight="bold")
             plt.tight_layout()
-            st.pyplot(fig)
+            st.pyplot(fig, use_container_width=True)
             plt.close(fig)
 
     except Exception as e:
