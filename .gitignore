@@ -1,0 +1,46 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+*.egg-info/
+src/*.egg-info/
+
+# Data
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*.csv
+
+# Models & artifacts (large models, keep directory)
+models/*.joblib
+!models/.gitkeep
+
+# MLflow tracking
+mlruns/
+.mlflow/
+
+# Reports and figures
+reports/figures/*.png
+reports/figures/*.html
+reports/metrics.json
+reports/data_summary.json
+reports/model_comparison.csv
+reports/best_params.json
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Testing & linting
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# OS files
+.DS_Store
+Thumbs.db
