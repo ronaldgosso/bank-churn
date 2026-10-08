@@ -26,6 +26,7 @@ from utils import (
 
 from churn.config import ALL_FEATURE_COLS, OFFER_COST
 from churn.predict import predict_batch
+from churn.validation import sanitize_portfolio_data
 
 st.set_page_config(
     page_title="Portfolio Explorer · Bank Churn",
@@ -71,42 +72,66 @@ with col_demo:
     load_demo = st.button("Load 2,000 Holdout Test Records", use_container_width=True)
 
 # Determine working DataFrame
-df_to_score: pd.DataFrame | None = None
+raw_input_df: pd.DataFrame | None = None
 source_name = ""
 
 if uploaded_file is not None:
     try:
-        df_uploaded = pd.read_csv(uploaded_file)
-        # Check required columns
-        missing_cols = [c for c in ALL_FEATURE_COLS if c not in df_uploaded.columns]
-        if missing_cols:
-            st.error(
-                f"Uploaded CSV is missing required feature columns: **{', '.join(missing_cols)}**. "
-                f"Please ensure all required columns are present."
-            )
-        else:
-            df_to_score = df_uploaded
-            source_name = uploaded_file.name
+        raw_input_df = pd.read_csv(uploaded_file)
+        source_name = uploaded_file.name
     except Exception as e:
         st.error(f"Failed to parse uploaded CSV: {e}")
 
 elif load_demo or ("df_to_score" in st.session_state and st.session_state.get("is_demo", False)):
     demo_data = get_cached_test_data()
     if not demo_data.empty:
-        # Exclude target 'Exited' from the inference input if present
-        feature_cols_present = [c for c in ALL_FEATURE_COLS if c in demo_data.columns]
-        df_to_score = demo_data[feature_cols_present].copy()
+        raw_input_df = demo_data.copy()
         st.session_state["is_demo"] = True
         source_name = "Holdout Test Dataset (2,000 customers)"
     else:
         st.warning("Demo dataset not found in data/processed/test.csv.")
 
-if df_to_score is None:
+if raw_input_df is None:
     st.info("Please upload a customer CSV file or click **Load 2,000 Holdout Test Records** above.")
 else:
-    # Run batch inference
+    # 1. Visible Data Sanitization Step
+    sanitized_df, audit_report = sanitize_portfolio_data(raw_input_df)
+
+    st.markdown("### 1. Data Sanitization & Schema Audit")
+
+    if not audit_report["is_valid"]:
+        st.error(
+            f"**Data Schema Incomplete:** Missing required modeling features: "
+            f"**{', '.join(audit_report['missing_required'])}**.\n\n"
+            f"The churn inference pipeline requires all 10 core customer features. "
+            f"Please verify your file column headers or download the template CSV above."
+        )
+        st.stop()
+
+    with st.expander("Data Schema & Quality Audit Details", expanded=True):
+        m1, m2, m3, m4 = st.columns(4)
+        with m1:
+            st.metric("Total Records", f"{audit_report['total_records']:,}")
+        with m2:
+            st.metric("Core Features", f"{len(audit_report['core_features_found'])} / 10 Verified")
+        with m3:
+            id_count = len(audit_report["identifier_columns"])
+            st.metric("Identifier Columns", f"{id_count} Preserved")
+        with m4:
+            anom_count = audit_report["nulls_imputed"] + audit_report["anomalies_coerced"]
+            status_text = "100% Clean" if anom_count == 0 else f"{anom_count} Coerced"
+            st.metric("Data Hygiene", status_text)
+
+        if audit_report["audit_messages"]:
+            st.markdown("**Sanitization Trail:**")
+            for msg in audit_report["audit_messages"]:
+                st.markdown(f"- {msg}")
+        else:
+            st.success("All 10 modeling features strictly adhere to production Pandera schema with zero missing values.")
+
+    # 2. Run batch inference
     with st.spinner("Executing batch inference across portfolio..."):
-        scored_df = predict_batch(df_to_score, model=model, threshold=threshold)
+        scored_df = predict_batch(sanitized_df, model=model, threshold=threshold)
 
     st.success(f"Successfully processed {len(scored_df):,} customers from **{source_name}**.")
 
@@ -119,7 +144,7 @@ else:
     contact_rate = contact_count / total_customers if total_customers > 0 else 0.0
     campaign_cost = contact_count * OFFER_COST
 
-    st.markdown("### Portfolio Risk Summary")
+    st.markdown("### 2. Portfolio Risk Summary")
     kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
 
     with kpi1:
@@ -136,7 +161,7 @@ else:
         st.metric("Campaign Budget", f"${campaign_cost:,.0f}", f"{contact_rate*100:.1f}% Contacted")
 
     # Risk Distribution Chart
-    st.markdown("### Churn Probability Distribution")
+    st.markdown("### 3. Churn Probability Distribution")
     hist_fig = px.histogram(
         scored_df,
         x="churn_probability",
@@ -158,7 +183,7 @@ else:
     st.plotly_chart(hist_fig, use_container_width=True)
 
     # Interactive Filtering & Table Exploration
-    st.markdown("### Targeted Customer Table")
+    st.markdown("### 4. Targeted Customer Campaign Extraction")
 
     f1, f2, f3 = st.columns(3)
     with f1:
