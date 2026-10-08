@@ -44,19 +44,21 @@ Global feature attribution shows that churn risk is predominantly driven by:
 5. **Balance / Salary Interaction:** High balance relative to estimated salary increases churn probability.
 
 ## 6. Fairness & Demographic Parity Audit
-Audited across Gender and Geography on the holdout test set:
+Audited across Gender and Geography on the holdout test set (from `reports/fairness_summary.json`):
 
 - **Gender Breakdown:**
-  - Female Churn Rate: 24.3% | Selection Rate: 28.5% | Recall: 65.8% | Precision: 56.1% | ROC-AUC: 0.8624
-  - Male Churn Rate: 17.1% | Selection Rate: 12.3% | Recall: 55.4% | Precision: 76.9% | ROC-AUC: 0.8688
-  - *Selection Rate Ratio:* 0.432 (reflects higher empirical underlying churn among females).
-  - *Recall Gap:* 10.4% between genders.
+  - Female ($n=930$): Churn Rate: 25.05% | Selection Rate: 24.09% | Recall: 63.52% | Precision: 66.07% | ROC-AUC: 0.8666
+  - Male ($n=1,070$): Churn Rate: 16.26% | Selection Rate: 15.51% | Recall: 58.05% | Precision: 60.84% | ROC-AUC: 0.8599
+  - *Selection Rate Ratio:* 0.6438 (reflects higher empirical underlying churn among females).
+  - *Recall Gap:* 5.47% between genders.
+  - *Precision Gap:* 5.23%.
 - **Geography Breakdown:**
-  - Germany: 39.4% Churn | Selection Rate: 39.8% | Recall: 67.2% | Precision: 66.5% | ROC-AUC: 0.8407
-  - France: 16.2% Churn | Selection Rate: 11.5% | Recall: 53.7% | Precision: 75.4% | ROC-AUC: 0.8753
-  - Spain: 16.7% Churn | Selection Rate: 14.8% | Recall: 64.9% | Precision: 73.1% | ROC-AUC: 0.8732
-  - *Selection Rate Ratio:* 0.289 (Germany has 2.4x higher baseline attrition).
-  - *Recall Gap:* 13.5% across geographic regions.
+  - Germany ($n=504$): Churn Rate: 29.96% | Selection Rate: 33.73% | Recall: 73.51% | Precision: 65.29% | ROC-AUC: 0.8706
+  - France ($n=1,021$): Churn Rate: 17.14% | Selection Rate: 14.50% | Recall: 53.14% | Precision: 62.84% | ROC-AUC: 0.8558
+  - Spain ($n=475$): Churn Rate: 17.05% | Selection Rate: 15.16% | Recall: 55.56% | Precision: 62.50% | ROC-AUC: 0.8725
+  - *Selection Rate Ratio:* 0.4299 (reflects Germany's 1.75x higher baseline attrition).
+  - *Recall Gap:* 20.37% across geographic regions.
+  - *Precision Gap:* 2.79%.
 
 *Limitation Note:* The model reflects historical demographic patterns present in the training cohort and should not be used as an autonomous gating mechanism without human retention specialist oversight.
 
