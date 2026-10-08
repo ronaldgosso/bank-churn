@@ -131,7 +131,7 @@ def get_sample_portfolio() -> pd.DataFrame:
         # Provide sample of 50 customers
         sample = test_df[feature_cols].head(50).copy()
         return sample
-    # Fallback synthetic row
+    # Fallback synthetic rows (High, Borderline, Low risk archetypes)
     return pd.DataFrame(
         [
             {
@@ -145,7 +145,31 @@ def get_sample_portfolio() -> pd.DataFrame:
                 "HasCrCard": 1,
                 "IsActiveMember": 0,
                 "EstimatedSalary": 60000.0,
-            }
+            },
+            {
+                "CreditScore": 680,
+                "Geography": "France",
+                "Gender": "Female",
+                "Age": 42,
+                "Tenure": 4,
+                "Balance": 92000.0,
+                "NumOfProducts": 1,
+                "HasCrCard": 1,
+                "IsActiveMember": 0,
+                "EstimatedSalary": 82000.0,
+            },
+            {
+                "CreditScore": 750,
+                "Geography": "France",
+                "Gender": "Male",
+                "Age": 32,
+                "Tenure": 7,
+                "Balance": 45000.0,
+                "NumOfProducts": 2,
+                "HasCrCard": 1,
+                "IsActiveMember": 1,
+                "EstimatedSalary": 65000.0,
+            },
         ]
     )
 
