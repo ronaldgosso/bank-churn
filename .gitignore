@@ -16,9 +16,10 @@ data/raw/*
 !data/raw/.gitkeep
 data/processed/*.csv
 
-# Models & artifacts (large models, keep directory)
-models/*.joblib
+# Models & artifacts (track production model and metadata)
 !models/.gitkeep
+!models/churn_model.joblib
+!models/metadata.json
 
 # MLflow tracking
 mlruns/
