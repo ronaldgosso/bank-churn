@@ -1,6 +1,7 @@
 # Runtime dependencies for Bank Churn Prediction & Decision Support
 pandas==3.0.6
-numpy==2.5.3
+numpy==2.4.6; python_version < "3.12"
+numpy==2.5.3; python_version >= "3.12"
 scikit-learn==1.9.1
 xgboost==3.4.1
 lightgbm==4.7.0
