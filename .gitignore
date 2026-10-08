@@ -23,6 +23,7 @@ models/*.joblib
 # MLflow tracking
 mlruns/
 .mlflow/
+mlflow.db
 
 
 # Notebook checkpoints
