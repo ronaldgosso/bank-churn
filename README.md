@@ -23,18 +23,7 @@ Yet, banks face two chronic operational challenges:
 1. **Limited Retention Budgets:** Banks cannot afford to give monetary concessions ($50 offers, fee waivers, bonus interest) to all 100,000+ customers.
 2. **The Flaw of Standard 0.50 Thresholds:** Off-the-shelf machine learning models default to a `0.50` probability cutoff. Because churn is an imbalanced event (~20% base rate), this arbitrary threshold **misses over 45% of genuine churners**, allowing millions in deposits to silently drain away.
 
-```
-  Traditional Approach (Naive 0.50 Cutoff):
-  [ 0.00 ........................... 0.49 ] [ 0.50 .................... 1.00 ]
-  ❌ Misses 45%+ of genuine churners        ⚠️ Intervenes only on obvious flight risks
-     Lost revenue: $100k+ in runoff           Wasted budget on uncalibrated guesses
-
-  This Platform (Cost-Sensitive Optimal Threshold t* = 0.333):
-  [ 0.00 ... 0.16 ] [ 0.17 ....... 0.33 ] [ 0.333 .................... 1.00 ]
-  🟢 SAFE ZONE      🟡 WATCHLIST          🔴 ACTIVE RETENTION ZONE
-     Preserve          Automated             Direct Banker Outreach Justified
-     Budget            Digital Nudges        Expected Net ROI is Positive!
-```
+<img width="1408" height="768" alt="Gemini_Generated_Image_h8yegyh8yegyh8ye" src="https://github.com/user-attachments/assets/7fc03b42-fca0-45cd-bfef-1a070ae7eabd" />
 
 ---
 
@@ -150,53 +139,7 @@ Analysis of SHAP attributions and exploratory patterns revealed four critical fi
 
 ## 🏗️ End-to-End System Architecture
 
-```
-  ┌────────────────────────────────────────────────────────────────────────────────────────┐
-  │                              End-to-End System Architecture                            │
-  └───────────────────────────────────────────┬────────────────────────────────────────────┘
-                                              │
-                      ┌───────────────────────┴───────────────────────┐
-                      ▼                                               ▼
-         ┌─────────────────────────┐                     ┌─────────────────────────┐
-         │     Raw Banking Data    │                     │   Batch Portfolio CSV   │
-         │   (Customer Profiles)   │                     │      (Bank Upload)      │
-         └────────────┬────────────┘                     └────────────┬────────────┘
-                      │                                               │
-                      ▼                                               ▼
-         ┌─────────────────────────────────────────────────────────────────────────┐
-         │              Pandera Schema Validation & Sanitization Engine            │
-         │   • Column alias remapping    • Type coercion    • Outlier clamping     │
-         └────────────────────────────────────┬────────────────────────────────────┘
-                                              │
-                                              ▼
-         ┌─────────────────────────────────────────────────────────────────────────┐
-         │                 Domain Feature Engineering Pipeline                     │
-         │   • Balance-to-Salary Ratio   • Tenure-to-Age Ratio   • Value Bins      │
-         └────────────────────────────────────┬────────────────────────────────────┘
-                                              │
-                                              ▼
-         ┌─────────────────────────────────────────────────────────────────────────┐
-         │               Calibrated XGBoost Ensemble Inference Engine              │
-         │   • Optuna-tuned tree weights   • 5-Fold Isotonic Probability Mapping   │
-         └────────────────────────────────────┬────────────────────────────────────┘
-                                              │
-                      ┌───────────────────────┴───────────────────────┐
-                      ▼                                               ▼
-         ┌─────────────────────────┐                     ┌─────────────────────────┐
-         │  Cost-Sensitive Optimal │                     │    SHAP Explainability  │
-         │    Boundary (t = 0.333) │                     │     & Recourse Engine   │
-         └────────────┬────────────┘                     └────────────┬────────────┘
-                      │                                               │
-                      └───────────────────────┬───────────────────────┘
-                                              │
-                      ┌───────────────────────┴───────────────────────┐
-                      ▼                                               ▼
-         ┌─────────────────────────┐                     ┌─────────────────────────┐
-         │  Streamlit Decision UI  │                     │   FastAPI REST Service  │
-         │ (bankcustomerchurning.  │                     │  (/predict, /recourse,  │
-         │       streamlit.app)    │                     │   /batch, Docker: 8000) │
-         └─────────────────────────┘                     └─────────────────────────┘
-```
+<img width="1312" height="1199" alt="End-to-End Banking System Architecture" src="https://github.com/user-attachments/assets/58e1227b-ac52-48fd-a450-0dc1ed79fee7" />
 
 ---
 
