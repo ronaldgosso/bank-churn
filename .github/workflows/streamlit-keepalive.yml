@@ -7,50 +7,72 @@ on:
   workflow_dispatch:
     inputs:
       app_url:
-        description: "Optional custom URL to ping"
+        description: "Optional custom URL to ping. If blank, uses the repo secret or variable."
         required: false
         default: ""
+
+permissions:
+  contents: read
 
 jobs:
   ping-streamlit:
     name: Ping Streamlit Cloud Instance
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - name: Ping Streamlit App
+      - name: Resolve app URL
+        shell: bash
         env:
           INPUT_URL: ${{ inputs.app_url }}
           SECRET_URL: ${{ secrets.STREAMLIT_APP_URL }}
           VAR_URL: ${{ vars.STREAMLIT_APP_URL }}
         run: |
-          TARGET_URL="${INPUT_URL:-${SECRET_URL:-$VAR_URL}}"
-          if [ -z "$TARGET_URL" ]; then
+          set -euo pipefail
+
+          TARGET_URL="${INPUT_URL:-${SECRET_URL:-${VAR_URL:-}}}"
+
+          if [ -z "${TARGET_URL}" ]; then
             echo "No STREAMLIT_APP_URL secret or variable configured. Skipping keep-alive ping."
             echo "To enable automatic keep-alive pings, add STREAMLIT_APP_URL in repo Settings -> Secrets and variables -> Actions."
             exit 0
           fi
 
-          # Ensure https:// prefix if missing
-          if [[ ! "$TARGET_URL" =~ ^https?:// ]]; then
-            TARGET_URL="https://$TARGET_URL"
+          if [[ "${TARGET_URL}" != http://* && "${TARGET_URL}" != https://* ]]; then
+            TARGET_URL="https://${TARGET_URL}"
           fi
 
-          # Sanitize URL: strip accidental /api/ or trailing paths to keep-alive base Streamlit domain
-          BASE_URL=$(echo "$TARGET_URL" | sed -E 's#(https?://[^/]+).*#\1#')
-          echo "Sanitized Streamlit Base URL: $BASE_URL"
+          TARGET_URL="${TARGET_URL%/}"
+          echo "TARGET_URL=${TARGET_URL}" >> "$GITHUB_ENV"
 
-          echo "Pinging Streamlit app at: $BASE_URL"
-          HTTP_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 30 "$BASE_URL")
-          echo "Base URL Response HTTP Status: $HTTP_STATUS"
+      - name: Ping Streamlit app
+        shell: bash
+        env:
+          TARGET_URL: ${{ env.TARGET_URL }}
+        run: |
+          set -euo pipefail
 
-          # Also probe Streamlit core healthcheck endpoint
-          HEALTH_URL="$BASE_URL/_stcore/health"
-          HEALTH_STATUS=$(curl -s -L -o /dev/null -w "%{http_code}" --max-time 15 "$HEALTH_URL" || true)
-          echo "Streamlit Health Endpoint ($HEALTH_URL) Status: $HEALTH_STATUS"
+          BASE_URL="$(printf '%s\n' "$TARGET_URL" | sed -E 's#(https?://[^/]+).*#\1#')"
+          HEALTH_URL="${BASE_URL}/_stcore/health"
 
-          if [ "$HTTP_STATUS" -ge 200 ] && [ "$HTTP_STATUS" -lt 400 ]; then
+          echo "Sanitized Streamlit Base URL: ${BASE_URL}"
+          echo "Pinging Streamlit app at: ${BASE_URL}"
+
+          HTTP_STATUS=$(curl -s -L -o /dev/null -w '%{http_code}' --max-time 30 "$BASE_URL" || true)
+          echo "Base URL Response HTTP Status: ${HTTP_STATUS:-000}"
+
+          echo "Checking Streamlit health endpoint: ${HEALTH_URL}"
+          HEALTH_STATUS=$(curl -s -L -o /dev/null -w '%{http_code}' --max-time 15 "$HEALTH_URL" || true)
+          echo "Streamlit Health Endpoint ($HEALTH_URL) Status: ${HEALTH_STATUS:-000}"
+
+          if [ -n "${HTTP_STATUS}" ] && [ "${HTTP_STATUS}" -ge 200 ] && [ "${HTTP_STATUS}" -lt 400 ]; then
             echo "Streamlit app is active and healthy!"
-          elif [ "$HEALTH_STATUS" = "200" ]; then
-            echo "Streamlit health check responded with HTTP 200 OK!"
-          else
-            echo "Warning: Received HTTP status $HTTP_STATUS from Streamlit app (Health: $HEALTH_STATUS)."
+            exit 0
           fi
+
+          if [ "${HEALTH_STATUS:-000}" = "200" ]; then
+            echo "Streamlit health check responded with HTTP 200 OK!"
+            exit 0
+          fi
+
+          echo "Warning: Received HTTP status ${HTTP_STATUS:-000} from Streamlit app (Health: ${HEALTH_STATUS:-000})."
+          exit 0
