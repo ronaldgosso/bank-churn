@@ -37,7 +37,7 @@ flowchart LR
    - Boots a headless Streamlit server in containerized CI.
    - Probes the `/_stcore/health` endpoint to guarantee cold start under 30 seconds before deployment.
 3. **Streamlit Keep-Alive Ping (`.github/workflows/streamlit-keepalive.yml`):**
-   - Runs on schedule twice weekly (Tuesdays and Fridays).
+   - Runs on schedule twice daily (08:00 and 20:00 UTC).
    - Pings your live Streamlit URL to prevent free-tier inactive sleep mode.
 
 ---

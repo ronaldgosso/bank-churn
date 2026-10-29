@@ -1,0 +1,9 @@
+name = "bank-churn-keepalive"
+main = "src/keepalive.js"
+compatibility_date = "2026-10-29"
+
+[triggers]
+crons = ["0 8,20 * * *"]
+
+[vars]
+STREAMLIT_APP_URL = "https://bankcustomerchurning.streamlit.app"

@@ -2,8 +2,8 @@ name: Streamlit Keep-Alive & Liveness Ping
 
 on:
   schedule:
-    # Run twice a week at 08:00 UTC (Tuesdays and Fridays) to prevent free-tier app sleep
-    - cron: "0 8 * * 2,5"
+    # Run twice daily at 08:00 and 20:00 UTC to prevent free-tier app sleep
+    - cron: "0 8,20 * * *"
   workflow_dispatch:
     inputs:
       app_url:
