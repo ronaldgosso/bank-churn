@@ -25,7 +25,6 @@ flowchart LR
     D --> E[Streamlit Cloud CD Webhook<br/>share.streamlit.io]
     E --> F[Automated Build & Hot Reload<br/>Python 3.12 + requirements.txt]
     F --> G[Live Decision App<br/>https://share.streamlit.io/...]
-    H[Scheduled Keep-Alive<br/>streamlit-keepalive.yml] -.->|Ping| G
 ```
 
 ### Automation Workflows Included:
@@ -36,9 +35,6 @@ flowchart LR
    - Automatically runs on pull requests and pushes to `main`.
    - Boots a headless Streamlit server in containerized CI.
    - Probes the `/_stcore/health` endpoint to guarantee cold start under 30 seconds before deployment.
-3. **Streamlit Keep-Alive Ping (`.github/workflows/streamlit-keepalive.yml`):**
-   - Runs on schedule twice daily (08:00 and 20:00 UTC).
-   - Pings your live Streamlit URL to prevent free-tier inactive sleep mode.
 
 ---
 
@@ -84,16 +80,28 @@ Streamlit Cloud will:
 
 ---
 
-## 🔔 Enabling the Automated Keep-Alive Ping
+## 🔔 Enabling the Automated Keep-Alive Ping (Cloudflare Workers)
 
-Streamlit Community Cloud puts apps without web traffic to sleep after several days of inactivity. To automate keep-alive pings:
+Streamlit Community Cloud puts apps without web traffic to sleep after several days of inactivity. Instead of GitHub Actions, this repo uses a Cloudflare Workers cron trigger to ping the app twice daily (08:00 and 20:00 UTC).
 
 1. Copy your deployed Streamlit URL (e.g. `https://bank-churn.streamlit.app`).
-2. Go to your GitHub repository: **Settings &rarr; Secrets and variables &rarr; Actions**.
-3. Under **Repository secrets** (or **Variables**), click **New repository variable / secret**:
-   - **Name:** `STREAMLIT_APP_URL`
-   - **Value:** `https://bank-churn.streamlit.app`
-4. The workflow `.github/workflows/streamlit-keepalive.yml` will now automatically keep your application warm on schedule.
+2. Update `wrangler.toml` — set `STREAMLIT_APP_URL` to your Streamlit URL.
+3. Install Wrangler and log in:
+   ```bash
+   npm install -g wrangler
+   wrangler login
+   ```
+4. Deploy the Worker:
+   ```bash
+   wrangler deploy
+   ```
+
+The Worker (`src/keepalive.js`) fetches your Streamlit app on each cron trigger, keeping the free-tier instance warm so visitors avoid cold starts.
+
+**To verify Cloudflare is working:**
+- Check the Workers dashboard for cron trigger executions at 08:00 and 20:00 UTC.
+- Review Worker logs via `wrangler tail` — you should see `Keep-alive ping: 200` on successful runs.
+- Confirm your Streamlit app stays responsive after hours of inactivity.
 
 ---
 
