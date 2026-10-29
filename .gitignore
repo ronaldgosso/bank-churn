@@ -10,6 +10,7 @@ ENV/
 env/
 *.egg-info/
 src/*.egg-info/
+.kilo
 
 # Data
 data/raw/*
