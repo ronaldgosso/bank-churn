@@ -3,7 +3,7 @@
 pandera==0.34.1
 imbalanced-learn==0.14.2
 optuna==5.0.0
-mlflow==3.17.0
+mlflow==3.17.2
 matplotlib==3.11.2
 seaborn==0.13.2
 pytest==9.1.1
